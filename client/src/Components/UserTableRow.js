@@ -1,7 +1,5 @@
-//src/Components/StudentTableRow.js
 import React from "react";
 import { Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import axios from "axios";
 
 const StudentTableRow = (props) => {
@@ -24,9 +22,6 @@ const StudentTableRow = (props) => {
       <td>{name}</td>
       <td>{email}</td>
       <td>
-        <Link className="edit-link" to={"/edit-student/" + _id}>
-          Edit
-        </Link>
         <Button onClick={deleteStudent} size="sm" variant="danger">
           Delete
         </Button>

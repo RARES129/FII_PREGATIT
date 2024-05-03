@@ -5,23 +5,36 @@ let mongoose = require("mongoose"),
 bcrypt = require("bcryptjs");
 
 // Student Model
-let studentSchema = require("../models/Student");
+let userSchema = require("../models/Student");
+
+const isAuthenticated = (req, res, next) => {
+  if (req.session && req.session.userId) {
+    // User is authenticated, proceed to next middleware
+    next();
+  } else {
+    // User is not authenticated, send 401 Unauthorized
+    res.status(401).send("Unauthorized");
+  }
+};
 
 // CREATE Student
-router.post("/create-student", async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
     // Hash and salt the password before saving to the database
     const hashedPassword = await bcrypt.hash(req.body.password, 10); // Hash the password with salt rounds = 10
 
     // Check if a user with the same email already exists
-    const existingUser = await studentSchema.findOne({ email: req.body.email });
-    if (existingUser) {
+    const existingEmail = await userSchema.findOne({
+      email: req.body.email,
+    });
+    if (existingEmail) {
       // If a user with the same email already exists, send an error message
       return res.status(400).send("A user with this email already exists");
     }
 
     // If no user with the same email exists, create a new user
-    const newUser = await studentSchema.create({
+    const newUser = await userSchema.create({
+      name: req.body.name,
       email: req.body.email,
       password: hashedPassword, // Save the hashed password to the database
       // Include other fields as needed
@@ -34,9 +47,25 @@ router.post("/create-student", async (req, res, next) => {
   }
 });
 
+// LOGIN Student
+router.post("/login", async (req, res, next) => {
+  try {
+    const user = await userSchema.findOne({ email: req.body.email });
+    if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
+      return res.status(401).send("Invalid email or password");
+    }
+
+    // Store user ID in session upon successful login
+    req.session.userId = user._id;
+    res.end();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // READ Students
 router.get("/", (req, res, next) => {
-  studentSchema
+  userSchema
     .find()
     .then((data) => {
       res.json(data);
@@ -48,7 +77,7 @@ router.get("/", (req, res, next) => {
 
 // Get Single Student
 router.get("/update-student/:id", (req, res, next) => {
-  studentSchema
+  userSchema
     .findById(req.params.id)
     .then((data) => {
       res.json(data);
@@ -58,22 +87,9 @@ router.get("/update-student/:id", (req, res, next) => {
     });
 });
 
-// Update Student Data
-router.put("/update-student/:id", (req, res, next) => {
-  studentSchema
-    .findByIdAndUpdate(req.params.id, { $set: req.body, $inc: { __v: 1 } })
-    .then((data) => {
-      res.json(data);
-      console.log("Student updated successfully !");
-    })
-    .catch((error) => {
-      return next(error);
-    });
-});
-
 // Delete Student
 router.delete("/delete-student/:id", (req, res, next) => {
-  studentSchema
+  userSchema
     .findByIdAndDelete(req.params.id)
     .then((data) => {
       res.status(200).json({ msg: data });
@@ -82,5 +98,11 @@ router.delete("/delete-student/:id", (req, res, next) => {
       return next(error);
     });
 });
+
+// router.get("/protected", isAuthenticated, (req, res) => {
+//   // If execution reaches here, user is authenticated
+//   res.send("You are logged in!");
+//   console.log("User is logged in");
+// });
 
 module.exports = router;

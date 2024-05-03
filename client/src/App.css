@@ -108,10 +108,16 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-.form-wrapper.h1 {
+.form-wrapper h1 {
   display: flex;
   justify-content: center;
   color: red;
+}
+
+.table-wrapper h1 {
+  display: flex;
+  justify-content: center;
+  color: rgb(115, 115, 115);
 }
 
 .form-group {

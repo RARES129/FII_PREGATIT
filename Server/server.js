@@ -1,10 +1,16 @@
-//backend/server.js
-let express = require("express");
-let mongoose = require("mongoose");
-let cors = require("cors");
-let bodyParser = require("body-parser");
-let dbConfig = require("./database/db");
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const session = require("express-session"); // Import express-session
+const dbConfig = require("./database/db");
+const crypto = require("crypto");
 
+const generateSecretKey = () => {
+  return crypto.randomBytes(32).toString("hex");
+};
+
+const secretKey = generateSecretKey();
 // Express Route
 const studentRoute = require("./routes/student.route");
 
@@ -27,6 +33,16 @@ app.use(
   })
 );
 app.use(cors());
+
+// Add express-session middleware
+app.use(
+  session({
+    secret: secretKey, // Change this to a secret key
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
 app.use("/users", studentRoute);
 
 // PORT

@@ -1,14 +1,13 @@
 // Import Modules
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import LoginForm from "./LoginForm";
 
-// LoginComponent Component
-const LoginComponent = () => {
+const LoginUser = () => {
   const [formValues, setFormValues] = useState({
-    username: "",
+    email: "",
     password: "",
   });
-
   // onSubmit handler
   const onSubmit = (userObject) => {
     axios
@@ -16,39 +15,32 @@ const LoginComponent = () => {
       .then((res) => {
         if (res.status === 200) {
           alert("User successfully logged in");
-          // Store user login status and username in local storage
-          localStorage.setItem('isLoggedIn', true);
-          localStorage.setItem('loggedInUser', userObject.username);
-        } else {
-          Promise.reject();
+          window.location.href = "/login";
         }
       })
-      .catch((err) => alert("Invalid username or password"));
+      .catch((err) => {
+        if (err.response && err.response.status === 401) {
+          alert(err.response.data);
+        } else {
+          alert("Something went wrong");
+        }
+      });
   };
 
-  // Return login form
+  // Return student form
   return (
-    <form onSubmit={onSubmit}>
-      <label>
-        Username:
-        <input
-          type="text"
-          value={formValues.username}
-          onChange={e => setFormValues({ ...formValues, username: e.target.value })}
-        />
-      </label>
-      <label>
-        Password:
-        <input
-          type="password"
-          value={formValues.password}
-          onChange={e => setFormValues({ ...formValues, password: e.target.value })}
-        />
-      </label>
-      <input type="submit" value="Log In" />
-    </form>
+    <>
+      <h1>Login</h1>
+      <LoginForm
+        initialValues={formValues}
+        onSubmit={onSubmit}
+        enableReinitialize
+      >
+        Login
+      </LoginForm>
+    </>
   );
 };
 
-// Export LoginComponent Component
-export default LoginComponent;
+// Export CreateStudent Component
+export default LoginUser;

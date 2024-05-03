@@ -13,9 +13,9 @@ import "./App.css";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 // Import other React Component
-import CreateStudent from "./Components/create-student.component.js";
-import EditStudent from "./Components/edit-student.component.js";
-import StudentList from "./Components/student-list.component.js";
+import Register from "./Components/register.component.js";
+import UserList from "./Components/user-list.component.js";
+import Login from "./Components/login.component.js";
 
 // App Component
 const App = () => {
@@ -26,7 +26,7 @@ const App = () => {
           <Navbar bg="dark" variant="dark">
             <Container>
               <Navbar.Brand>
-                <Link to={"/create-student"} className="nav-link">
+                <Link to={"/"} className="nav-link">
                   FII Pregătit
                 </Link>
               </Navbar.Brand>
@@ -38,7 +38,7 @@ const App = () => {
                   </Link>
                 </Nav>
                 <Nav>
-                  <Link to={"/create-student"} className="nav-link">
+                  <Link to={"/register"} className="nav-link">
                     Register
                   </Link>
                 </Nav>
@@ -58,10 +58,10 @@ const App = () => {
             <Col md={12}>
               <div className="wrapper">
                 <Routes>
-                  <Route exact path="/" element={<CreateStudent />} />
-                  <Route path="/create-student" element={<CreateStudent />} />
-                  <Route path="/edit-student/:id" element={<EditStudent />} />
-                  <Route path="/student-list" element={<StudentList />} />
+                  <Route exact path="/" element={<Register />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/student-list" element={<UserList />} />
+                  <Route path="/login" element={<Login />} />
                 </Routes>
               </div>
             </Col>

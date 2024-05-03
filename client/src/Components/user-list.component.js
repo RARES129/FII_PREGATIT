@@ -1,17 +1,16 @@
-//src/Components/student-list.component.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Table } from "react-bootstrap";
-import StudentTableRow from "./StudentTableRow";
+import UserTableRow from "./UserTableRow";
 
-const StudentList = () => {
-  const [students, setStudents] = useState([]);
+const UserList = () => {
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     axios
       .get("http://localhost:4000/users/")
       .then(({ data }) => {
-        setStudents(data);
+        setUsers(data);
       })
       .catch((error) => {
         console.log(error);
@@ -19,13 +18,14 @@ const StudentList = () => {
   }, []);
 
   const DataTable = () => {
-    return students.map((res, i) => {
-      return <StudentTableRow obj={res} key={i} />;
+    return users.map((res, i) => {
+      return <UserTableRow obj={res} key={i} />;
     });
   };
 
   return (
     <div className="table-wrapper">
+      <h1> User List:</h1>
       <Table striped bordered hover>
         <thead>
           <tr>
@@ -40,4 +40,4 @@ const StudentList = () => {
   );
 };
 
-export default StudentList;
+export default UserList;
