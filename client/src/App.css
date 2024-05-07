@@ -53,7 +53,6 @@ input[type="number"] {
 h1 {
   display: flex;
   justify-content: center;
-  color: red;
 }
 
 .wrapper {
@@ -111,13 +110,13 @@ input[type="number"] {
 .form-wrapper h1 {
   display: flex;
   justify-content: center;
-  color: red;
+  color: rgb(255, 0, 0);
 }
 
 .table-wrapper h1 {
   display: flex;
   justify-content: center;
-  color: rgb(115, 115, 115);
+  color: rgb(33, 37, 41);
 }
 
 .form-group {

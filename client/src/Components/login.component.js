@@ -15,7 +15,7 @@ const LoginUser = () => {
       .then((res) => {
         if (res.status === 200) {
           alert("User successfully logged in");
-          window.location.href = "/login";
+          window.location.href = "/";
         }
       })
       .catch((err) => {
@@ -30,7 +30,6 @@ const LoginUser = () => {
   // Return student form
   return (
     <>
-      <h1>Login</h1>
       <LoginForm
         initialValues={formValues}
         onSubmit={onSubmit}

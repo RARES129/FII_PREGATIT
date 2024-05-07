@@ -16,6 +16,9 @@ const StudentForm = (props) => {
       <Formik {...props} validationSchema={validationSchema}>
         <Form>
           <FormGroup className="form-group">
+            <h1>Login</h1>
+          </FormGroup>
+          <FormGroup className="form-group">
             <h6>Email:</h6>
             <Field name="email" type="email" className="form-control" />
             <ErrorMessage

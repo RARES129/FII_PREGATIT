@@ -17,6 +17,14 @@ const isAuthenticated = (req, res, next) => {
   }
 };
 
+router.get("/isLoggedIn", (req, res) => {
+  if (req.session && req.session.userId) {
+    res.status(200).send(true);
+  } else {
+    res.send(false);
+  }
+});
+
 // CREATE Student
 router.post("/register", async (req, res, next) => {
   try {
@@ -47,7 +55,7 @@ router.post("/register", async (req, res, next) => {
   }
 });
 
-// LOGIN Student
+// LOGIN
 router.post("/login", async (req, res, next) => {
   try {
     const user = await userSchema.findOne({ email: req.body.email });
@@ -60,6 +68,24 @@ router.post("/login", async (req, res, next) => {
     res.end();
   } catch (error) {
     next(error);
+  }
+});
+
+// LOGOUT
+router.post("/logout", (req, res) => {
+  try {
+    // Destroy the session
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error while logging out:", err);
+        return res.status(500).send("Error while logging out");
+      }
+      // Session destroyed successfully
+      res.status(200).send("Logged out successfully");
+    });
+  } catch (error) {
+    console.error("Error while logging out:", error);
+    res.status(500).send("Error while logging out");
   }
 });
 

@@ -3,7 +3,7 @@ import * as Yup from "yup";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { FormGroup, FormControl, Button } from "react-bootstrap";
 
-const StudentForm = (props) => {
+const UserForm = (props) => {
   const validationSchema = Yup.object().shape({
     name: Yup.string().required("Required"),
     email: Yup.string()
@@ -15,7 +15,7 @@ const StudentForm = (props) => {
       .matches(/[a-z]/, "Password must contain at least one lowercase char")
       .matches(/[A-Z]/, "Password must contain at least one uppercase char")
       .matches(
-        /[a-zA-Z]+[^a-zA-Z\s]+/,
+        /[!@#$%^&*(),.?":{}|<>]/,
         "at least 1 number or special char (@,!,#, etc)."
       ),
   });
@@ -24,6 +24,9 @@ const StudentForm = (props) => {
     <div className="form-wrapper">
       <Formik {...props} validationSchema={validationSchema}>
         <Form>
+          <FormGroup className="form-group">
+            <h1>Register</h1>
+          </FormGroup>
           <FormGroup className="form-group">
             <h6>Username:</h6>
             <Field name="name" type="text" className="form-control" />
@@ -71,4 +74,4 @@ const StudentForm = (props) => {
   );
 };
 
-export default StudentForm;
+export default UserForm;

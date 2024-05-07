@@ -33,7 +33,7 @@ const CreateStudent = () => {
   // Return student form
   return (
     <>
-      <h1>Register</h1>
+      
       <RegisterForm
         initialValues={formValues}
         onSubmit={onSubmit}
