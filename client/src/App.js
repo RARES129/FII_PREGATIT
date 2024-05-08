@@ -17,11 +17,12 @@ import Register from "./Components/register.component.js";
 import UserList from "./Components/user-list.component.js";
 import Login from "./Components/login.component.js";
 import Home from "./Components/home.component.js";
-import isLoggedIn from "./Components/checkLoggedIn.js";
+import useLoggedIn from "./Components/checkLoggedIn.js";
 import Logout from "./Components/Logout";
 
 // App Component
 const App = () => {
+  const isLoggedIn = useLoggedIn(); // Use the custom hook
   return (
     <Router>
       <div className="App">

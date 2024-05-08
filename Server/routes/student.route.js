@@ -20,8 +20,10 @@ const isAuthenticated = (req, res, next) => {
 router.get("/isLoggedIn", (req, res) => {
   if (req.session && req.session.userId) {
     res.status(200).send(true);
+    console.log("User is logged in");
   } else {
     res.send(false);
+    console.log("User is not logged in");
   }
 });
 
@@ -55,17 +57,23 @@ router.post("/register", async (req, res, next) => {
   }
 });
 
-// LOGIN
 router.post("/login", async (req, res, next) => {
   try {
     const user = await userSchema.findOne({ email: req.body.email });
+    console.log("User found:", user); // Log user object
     if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
       return res.status(401).send("Invalid email or password");
     }
 
     // Store user ID in session upon successful login
-    req.session.userId = user._id;
-    res.end();
+    if (!req.session.userId) {
+      req.session.userId = user._id;
+    }
+    // Trimite cookie-ul de sesiune înapoi către client
+    res.cookie("sessionId", req.session.id, { httpOnly: true }); // Acesta este un exemplu, asigură-te că ajustezi opțiunile cookie-ului după nevoile tale
+
+    // Trimite răspunsul către client
+    res.status(200).send("Logged in successfully");
   } catch (error) {
     next(error);
   }
@@ -73,20 +81,24 @@ router.post("/login", async (req, res, next) => {
 
 // LOGOUT
 router.post("/logout", (req, res) => {
-  try {
-    // Destroy the session
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Error while logging out:", err);
-        return res.status(500).send("Error while logging out");
-      }
-      // Session destroyed successfully
-      res.status(200).send("Logged out successfully");
-    });
-  } catch (error) {
-    console.error("Error while logging out:", error);
-    res.status(500).send("Error while logging out");
-  }
+  // Remove userId from session
+  console.log(req.session.id);
+  delete req.session.userId;
+
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error while logging out:", err);
+      return res.status(500).send("Error while logging out");
+    }
+
+    // Session destroyed successfully
+
+    res.clearCookie("sessionId");
+    res.clearCookie("connect.sid");
+
+    res.status(200).send("Logged out successfully");
+    console.log("User logged out successfully");
+  });
 });
 
 // READ Students

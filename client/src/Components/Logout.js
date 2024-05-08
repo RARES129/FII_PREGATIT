@@ -1,22 +1,23 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import axios from "axios";
 
-const Logout = () => {
-  const [isLoggedOut, setIsLoggedOut] = useState(false);
+axios.defaults.withCredentials = true;
 
-  const handleLogout = async () => {
-    try {
-      const response = await axios.post("http://localhost:4000/users/logout");
-      if (response.status === 200) {
-        setIsLoggedOut(true);
+const Logout = ({ onLogout }) => {
+  useEffect(() => {
+    const handleLogout = async () => {
+      try {
+        await axios.post("http://localhost:4000/users/logout");
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Error logging out:", error);
       }
-    } catch (error) {
-      console.error("Error logging out:", error);
-      setIsLoggedOut(false);
-    }
-  };
+    };
 
-  handleLogout();
+    handleLogout();
+  }, [onLogout]);
+
+  return null;
 };
 
 export default Logout;

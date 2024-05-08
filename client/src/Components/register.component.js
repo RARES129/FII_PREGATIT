@@ -1,8 +1,8 @@
-
 // Import Modules
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import RegisterForm from "./RegisterForm";
+axios.defaults.withCredentials = true;
 
 // CreateStudent Component
 const CreateStudent = () => {
@@ -33,7 +33,6 @@ const CreateStudent = () => {
   // Return student form
   return (
     <>
-      
       <RegisterForm
         initialValues={formValues}
         onSubmit={onSubmit}

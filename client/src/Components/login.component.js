@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LoginForm from "./LoginForm";
+axios.defaults.withCredentials = true;
 
 const LoginUser = () => {
   const [formValues, setFormValues] = useState({

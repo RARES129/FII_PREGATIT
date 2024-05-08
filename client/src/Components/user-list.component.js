@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Table } from "react-bootstrap";
 import UserTableRow from "./UserTableRow";
+axios.defaults.withCredentials = true;
 
 const UserList = () => {
   const [users, setUsers] = useState([]);

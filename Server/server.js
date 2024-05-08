@@ -2,17 +2,19 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const session = require("express-session"); // Import express-session
+const session = require("express-session");
 const dbConfig = require("./database/db");
 const crypto = require("crypto");
+const MongoDBStore = require("connect-mongodb-session")(session);
 
 const generateSecretKey = () => {
   return crypto.randomBytes(32).toString("hex");
 };
 
 const secretKey = generateSecretKey();
+
 // Express Route
-const studentRoute = require("./routes/student.route");
+const userRoute = require("./routes/student.route");
 
 // Connecting MongoDB Database
 mongoose.Promise = global.Promise;
@@ -32,18 +34,46 @@ app.use(
     extended: true,
   })
 );
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+
+// Create a new instance of MongoDBStore
+const store = new MongoDBStore({
+  uri: process.env.DB_URL,
+  collection: "sessions",
+});
+
+// Catch errors in MongoDBStore
+store.on("error", function (error) {
+  console.log(error);
+});
 
 // Add express-session middleware
 app.use(
   session({
-    secret: secretKey, // Change this to a secret key
-    resave: false,
+    secret: secretKey,
+    resave: true,
     saveUninitialized: false,
+    store: store,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24,
+      secure: false,
+    },
   })
 );
 
-app.use("/users", studentRoute);
+// Middleware to log session ID (moved after userRoute)
+app.use("/users", userRoute, (req, res, next) => {
+  console.log("Session ID:", req.sessionID);
+  next();
+});
+
+// Routes
+app.use("/users", userRoute);
 
 // PORT
 const port = process.env.PORT || 4000;
@@ -56,6 +86,7 @@ app.use((req, res, next) => {
   res.status(404).send("Error 404!");
 });
 
+// Error Handling Middleware
 app.use(function (err, req, res, next) {
   console.error(err.message);
   if (!err.statusCode) err.statusCode = 500;

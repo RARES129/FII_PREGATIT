@@ -1,5 +1,7 @@
+// checkLoggedIn.js
 import { useState, useEffect } from "react";
 import axios from "axios";
+axios.defaults.withCredentials = true;
 
 const LoggedIn = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -7,24 +9,21 @@ const LoggedIn = () => {
   useEffect(() => {
     const checkLoggedIn = async () => {
       try {
+        // Include withCredentials: true pentru a trimite cookie-urile cu cererea
         const response = await axios.get(
           "http://localhost:4000/users/isLoggedIn"
         );
-        if (response.data === true) {
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-        }
+        setIsLoggedIn(response.data); // Setează isLoggedIn pe baza răspunsului
       } catch (error) {
-        console.error("Error checking login status:", error);
-        setIsLoggedIn(false);
+        console.error("Eroare la verificarea stării de conectare:", error);
+        setIsLoggedIn(false); // Setează isLoggedIn la false în caz de eroare
       }
     };
 
     checkLoggedIn();
-  }, [isLoggedIn]); // Re-run effect when isLoggedIn changes
+  }, []); // Matricea de dependență este goală, deci acest efect rulează doar o dată când componenta este montată
 
-  return isLoggedIn;
+  return isLoggedIn; // Returnează variabila de stare
 };
 
 export default LoggedIn;
