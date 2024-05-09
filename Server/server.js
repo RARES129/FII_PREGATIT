@@ -14,7 +14,7 @@ const generateSecretKey = () => {
 const secretKey = generateSecretKey();
 
 // Express Route
-const userRoute = require("./routes/student.route");
+const userRoute = require("./routes/user.route");
 
 // Connecting MongoDB Database
 mongoose.Promise = global.Promise;

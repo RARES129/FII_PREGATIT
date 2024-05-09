@@ -5,7 +5,7 @@ let mongoose = require("mongoose"),
 bcrypt = require("bcryptjs");
 
 // Student Model
-let userSchema = require("../models/Student");
+let userSchema = require("../models/User");
 
 const isAuthenticated = (req, res, next) => {
   if (req.session && req.session.userId) {
@@ -20,10 +20,10 @@ const isAuthenticated = (req, res, next) => {
 router.get("/isLoggedIn", (req, res) => {
   if (req.session && req.session.userId) {
     res.status(200).send(true);
-    console.log("User is logged in");
+    // console.log("User is logged in");
   } else {
     res.send(false);
-    console.log("User is not logged in");
+    // console.log("User is not logged in");
   }
 });
 

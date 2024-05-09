@@ -2,9 +2,11 @@ import React from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
 import Home from "../Pages/Home/home.component.js";
 import Register from "../Pages/Register/register.component.js";
-import UserList from "../Pages/User_list/user-list.component.js";
+import UserList from "../Pages/UserList/user-list.component.js";
 import Login from "../Pages/Login/login.component.js";
 import Logout from "../Components/Logout";
+import NotFound from "../Pages/NotFound/NotFound.js";
+import Training from "../Pages/Training/training.component.js";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -17,6 +19,7 @@ const PublicRoute = ({ isLoggedIn, children }) => {
 const AppRoutes = ({ isLoggedIn }) => (
   <Routes>
     <Route path="/" element={<Home />} />
+    <Route path="/problem-list" element={<Training />} />
     <Route
       path="/register"
       element={
@@ -49,6 +52,7 @@ const AppRoutes = ({ isLoggedIn }) => (
         </PrivateRoute>
       }
     />
+    <Route path="*" element={<NotFound />} />
   </Routes>
 );
 
