@@ -7,6 +7,8 @@ import Login from "../Pages/Login/login.component.js";
 import Logout from "../Components/Logout";
 import NotFound from "../Pages/NotFound/NotFound.js";
 import Training from "../Pages/Training/training.component.js";
+import ForgotPassword from "../Pages/ForgotPassword/Forgot.component.js";
+import ResetPassword from "../Pages/ForgotPassword/Reset.component.js";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -41,6 +43,22 @@ const AppRoutes = ({ isLoggedIn }) => (
       element={
         <PublicRoute isLoggedIn={isLoggedIn}>
           <Login />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path="/forgot-password"
+      element={
+        <PublicRoute isLoggedIn={isLoggedIn}>
+          <ForgotPassword />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path="/reset-password/:token"
+      element={
+        <PublicRoute isLoggedIn={isLoggedIn}>
+          <ResetPassword />
         </PublicRoute>
       }
     />

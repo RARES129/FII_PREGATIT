@@ -1,45 +1,37 @@
+// ResetPasswordForm.js
 import React from "react";
 import * as Yup from "yup";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { FormGroup, Button } from "react-bootstrap";
 
-const LoginForm = (props) => {
+const ResetPasswordForm = (props) => {
   const validationSchema = Yup.object().shape({
-    email: Yup.string()
-      .email(`You have enter an invalid email address`)
-      .required("Required"),
-    password: Yup.string().required("Required"),
+    password: Yup.string()
+      .required("Required")
+      .min(8, "Password must be at least 8 characters")
+      .matches(/[a-z]/, "Password must contain at least one lowercase char")
+      .matches(/[A-Z]/, "Password must contain at least one uppercase char")
+      .matches(
+        /[!@#$%^&*(),.?":{}|<>]/,
+        "at least 1 number or special char (@,!,#, etc)."
+      ),
   });
-  console.log(props);
+
   return (
     <div className="form-wrapper">
       <Formik {...props} validationSchema={validationSchema}>
         <Form>
           <FormGroup className="form-group">
-            <h1>Login</h1>
-          </FormGroup>
-          <FormGroup className="form-group">
-            <h6>Email:</h6>
-            <Field name="email" type="email" className="form-control" />
-            <ErrorMessage
-              name="email"
-              className="d-block 
-								invalid-feedback"
-              component="span"
-            />
+            <h1>Enter your new password</h1>
           </FormGroup>
           <FormGroup className="form-group">
             <h6>Password:</h6>
             <Field name="password" type="password" className="form-control" />
             <ErrorMessage
               name="password"
-              className="d-block 
-								invalid-feedback"
+              className="d-block invalid-feedback"
               component="span"
             />
-            <Button variant="link" className="forgot" href="/forgot-password">
-              Forgot Password?
-            </Button>
           </FormGroup>
           <div
             style={{
@@ -58,4 +50,4 @@ const LoginForm = (props) => {
   );
 };
 
-export default LoginForm;
+export default ResetPasswordForm;

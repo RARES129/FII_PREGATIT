@@ -3,7 +3,7 @@ import axios from "axios";
 
 axios.defaults.withCredentials = true;
 
-const Logout = ({ onLogout }) => {
+const Logout = () => {
   useEffect(() => {
     const handleLogout = async () => {
       try {
@@ -15,7 +15,7 @@ const Logout = ({ onLogout }) => {
     };
 
     handleLogout();
-  }, [onLogout]);
+  }, []);
 
   return null;
 };

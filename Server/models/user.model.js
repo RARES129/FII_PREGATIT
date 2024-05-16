@@ -13,6 +13,14 @@ let userSchema = new Schema(
     password: {
       type: String,
     },
+    resetToken: {
+      type: String,
+      default: null,
+    },
+    resetTokenExpiration: {
+      type: Date,
+      default: null,
+    },
   },
   {
     collection: "users",

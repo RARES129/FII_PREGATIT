@@ -3,12 +3,11 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const session = require("express-session");
-const dbConfig = require("./database/db");
-const crypto = require("crypto");
+const connectDB = require("./database/db");
 const MongoDBStore = require("connect-mongodb-session")(session);
 
 const generateSecretKey = () => {
-  return crypto.randomBytes(32).toString("hex");
+  return require("crypto").randomBytes(32).toString("hex");
 };
 
 const secretKey = generateSecretKey();
@@ -16,16 +15,7 @@ const secretKey = generateSecretKey();
 // Express Route
 const userRoute = require("./routes/user.route");
 
-// Connecting MongoDB Database
-mongoose.Promise = global.Promise;
-mongoose.connect(dbConfig.db).then(
-  () => {
-    console.log("Database successfully connected!");
-  },
-  (error) => {
-    console.log("Could not connect to database : " + error);
-  }
-);
+connectDB();
 
 const app = express();
 app.use(bodyParser.json());
