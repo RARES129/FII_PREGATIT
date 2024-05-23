@@ -9,6 +9,8 @@ import NotFound from "../Pages/NotFound/NotFound.js";
 import Training from "../Pages/Training/training.component.js";
 import ForgotPassword from "../Pages/ForgotPassword/Forgot.component.js";
 import ResetPassword from "../Pages/ForgotPassword/Reset.component.js";
+import CreateProblem from "../Pages/Create problem/create.problem.component.js";
+import Exercise from "../Pages/ExercisePage/exercise.component.js";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -63,10 +65,26 @@ const AppRoutes = ({ isLoggedIn }) => (
       }
     />
     <Route
+      path="/exercise/:token"
+      element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <Exercise />
+        </PrivateRoute>
+      }
+    />
+    <Route
       path="/logout"
       element={
         <PrivateRoute isLoggedIn={isLoggedIn}>
           <Logout />
+        </PrivateRoute>
+      }
+    />
+    <Route
+      path="/create-problem"
+      element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <CreateProblem />
         </PrivateRoute>
       }
     />

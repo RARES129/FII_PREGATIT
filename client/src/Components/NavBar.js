@@ -3,7 +3,7 @@ import { Nav, Navbar, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
 const NavBar = ({ isLoggedIn }) => (
-  <Navbar bg="dark" variant="dark">
+  <Navbar bg="dark" variant="dark" fixed="top">
     <Container>
       <Navbar.Brand>
         <Link to={"/"} className="nav-link">
@@ -20,7 +20,7 @@ const NavBar = ({ isLoggedIn }) => (
           </Nav> */}
           <Nav>
             <Link to={"/problem-list"} className="nav-link">
-                Exercises
+              Exercises
             </Link>
           </Nav>
           <Nav>

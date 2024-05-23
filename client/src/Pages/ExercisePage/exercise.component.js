@@ -1,24 +1,20 @@
 // Import Modules
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import RegisterForm from "./RegisterForm";
+import ExerciseForm from "./ExerciseForm";
 axios.defaults.withCredentials = true;
 
-// CreateStudent Component
-const CreateStudent = () => {
+const Exercise = () => {
   const [formValues, setFormValues] = useState({
-    name: "",
-    email: "",
-    password: "",
+    problemCode: "",
   });
   // onSubmit handler
   const onSubmit = (Object) => {
     axios
-      .post("http://localhost:4000/users/register", Object)
+      .post("http://localhost:4000/users/create-problem", Object)
       .then((res) => {
         if (res.status === 200) {
           alert("User successfully registered");
-          window.location.href = "/login";
         }
       })
       .catch((err) => {
@@ -33,16 +29,15 @@ const CreateStudent = () => {
   // Return student form
   return (
     <>
-      <RegisterForm
+      <ExerciseForm
         initialValues={formValues}
         onSubmit={onSubmit}
         enableReinitialize
       >
-        Register
-      </RegisterForm>
+        Submit
+      </ExerciseForm>
     </>
   );
 };
 
-// Export CreateStudent Component
-export default CreateStudent;
+export default Exercise;
