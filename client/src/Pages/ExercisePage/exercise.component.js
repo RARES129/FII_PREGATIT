@@ -6,11 +6,13 @@ import NotFound from "../NotFound/NotFound";
 axios.defaults.withCredentials = true;
 
 const Exercise = () => {
+  const [loading, setLoading] = useState(false);
   const [exercise, setExercise] = useState(null);
   const [exerciseNotFound, setExerciseNotFound] = useState(false);
   const { id } = useParams();
   const [formValues, setFormValues] = useState({
     problemCode: "",
+    score: null,
   });
 
   useEffect(() => {
@@ -29,6 +31,7 @@ const Exercise = () => {
 
   const onSubmit = (values) => {
     console.log("Form submitted with values:", values.problemCode);
+    setLoading(true);
 
     axios
       .post(`http://localhost:4000/users/exercise/${id}`, {
@@ -36,7 +39,8 @@ const Exercise = () => {
       })
       .then((res) => {
         if (res.status === 200) {
-          alert("Exercise successfully submitted");
+          setFormValues({ ...formValues, score: res.data.score });
+          setLoading(false);
         }
       })
       .catch((err) => {
@@ -45,6 +49,7 @@ const Exercise = () => {
         } else {
           alert("Something went wrong");
         }
+        setLoading(false);
       });
   };
 
@@ -63,6 +68,8 @@ const Exercise = () => {
         exercise={exercise}
         onSubmit={onSubmit}
         enableReinitialize
+        score={formValues.score}
+        loading={loading} 
       >
         Submit
       </ExerciseForm>

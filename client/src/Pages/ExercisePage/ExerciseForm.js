@@ -1,8 +1,8 @@
 import React from "react";
-import * as Yup from "yup";
 import { Formik, Form, ErrorMessage } from "formik";
 import { FormGroup, Button } from "react-bootstrap";
 import AceEditor from "react-ace";
+import Spinner from "react-bootstrap/Spinner";
 
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
@@ -29,7 +29,7 @@ const Score = ({ value }) => {
           style={{
             color: color,
             textAlign: "center",
-            webkitTextStroke: "0.5px black",
+            WebkitTextStroke: "0.5px black",
           }}
         >
           {value}%
@@ -58,6 +58,7 @@ const Circles = ({ value }) => {
     return (
       <div
         style={{
+          marginTop: "20px",
           height: "50px",
           width: "50px",
           backgroundColor: color,
@@ -127,11 +128,16 @@ const ExerciseForm = (props) => {
               {Array(10)
                 .fill()
                 .map((_, index) => (
-                  <Circles key={index} value={null} />
+                  <Circles key={index} value={props.score} />
                 ))}
             </div>
-            <div>
-              <Score value={null} />
+            <div
+              style={{
+                marginTop: "10px",
+                textAlign: "center",
+              }}
+            >
+              {props.loading ? <Spinner /> : <Score value={props.score} />}
             </div>
 
             <div

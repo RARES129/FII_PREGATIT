@@ -39,7 +39,8 @@ function processQueue() {
   const { req, res } = queue.shift();
   const code = req.body.code;
   console.log("Processing code:", code);
-  const tempDir = path.join(__dirname, "temp");
+  const tempDir = path.join(__dirname, "..", "temp");
+  fs.mkdir(tempDir, { recursive: true }).catch(console.error);
   const uniqueId = uuidv4();
   const filename = path.join(tempDir, `temp_${uniqueId}.cpp`);
   const outputFilename = path.join(tempDir, `temp_${uniqueId}.out`);
@@ -56,8 +57,8 @@ function processQueue() {
           if (compileError) {
             console.error("Compilation error:", compileError);
             console.error("stderr:", compileStderr);
-            res.status(500).json({ output: compileStderr });
-            // cleanup(filename, outputFilename);
+            res.json({ score: 0 });
+            cleanup(filename, outputFilename);
             return;
           }
 
@@ -72,6 +73,14 @@ function processQueue() {
               );
 
               const child = spawn(executable);
+
+              // Set a timeout for the child process
+              let timeoutId = setTimeout(() => {
+                child.kill(); // This will terminate the process
+                console.log(
+                  `Test case ${index + 1} timed out and was terminated`
+                );
+              }, 5000); // Timeout is set to 5 seconds
 
               let outputData = "";
               let errorData = "";
@@ -88,6 +97,7 @@ function processQueue() {
               });
 
               child.on("close", (code) => {
+                clearTimeout(timeoutId); // Clear the timeout if the process ends before the timeout
                 if (code !== 0) {
                   console.error(
                     `Test case ${index + 1} execution error:`,
