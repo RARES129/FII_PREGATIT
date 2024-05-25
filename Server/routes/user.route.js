@@ -9,5 +9,9 @@ router.use("/delete-student/:id", require("../endpoints/deleteUser"));
 router.use("/forgot-password/:id", require("../endpoints/forgotPassword"));
 router.use("/reset-password/:id", require("../endpoints/resetPassword"));
 router.use("/isLoggedIn", require("../endpoints/isLoggedIn"));
+router.use("/create-exercise", require("../endpoints/createExercise"));
+router.use("/exercises", require("../endpoints/readExercices"));
+router.use("/exercise-text/", require("../endpoints/readSingleExercise"));
+router.use("/exercise/", require("../endpoints/submitExercise"));
 
 module.exports = router;

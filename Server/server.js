@@ -42,6 +42,14 @@ store.on("error", function (error) {
   console.log(error);
 });
 
+store.clear(function (err) {
+  if (err) {
+    console.error("Error clearing sessions:", err);
+  } else {
+    console.log("All sessions cleared successfully.");
+  }
+});
+
 // Add express-session middleware
 app.use(
   session({

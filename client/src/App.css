@@ -10,10 +10,6 @@ body h3 {
   color: #ffffff;
 }
 
-.table-wrapper {
-  max-width: 700px;
-}
-
 .edit-link {
   padding: 7px 10px;
   font-size: 0.875rem;
@@ -78,6 +74,14 @@ body h3 {
 
 .table-wrapper {
   max-width: 700px;
+}
+
+.action {
+  width: 25%;
+}
+
+.id {
+  width: 10%;
 }
 
 .edit-link {

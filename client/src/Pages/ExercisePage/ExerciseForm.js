@@ -1,18 +1,11 @@
 import React from "react";
 import * as Yup from "yup";
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import { FormGroup, FormControl, Button } from "react-bootstrap";
+import { Formik, Form, ErrorMessage } from "formik";
+import { FormGroup, Button } from "react-bootstrap";
 import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
-import { alignPropType } from "react-bootstrap/esm/types";
-
-const name = "DA";
-const problemText =
-  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-const exampleInput = "aaaaaaaaaaaaaaaaaaaaa";
-const exampleOutput = "aaaaaaaaaaaaaaaaaaaaa";
 
 const Score = ({ value }) => {
   let color = "gray";
@@ -79,39 +72,24 @@ const Circles = ({ value }) => {
 };
 
 const ExerciseForm = (props) => {
-  const validationSchema = Yup.object().shape({
-    problemCode: Yup.string().required("Problem code is required"),
-  });
-  const value = null; // scorul de la backend
-
-  console.log(props);
   return (
     <div className="form-wrapper-problem">
-      <Formik
-        initialValues={{
-          problemCode: "",
-        }}
-        validationSchema={validationSchema}
-        onSubmit={(values) => {
-          console.log("Form data", values);
-          // Handle form submission
-        }}
-      >
-        {({ isSubmitting, setFieldValue, values }) => (
+      <Formik {...props}>
+        {({ setFieldValue }) => (
           <Form>
             <FormGroup className="form-group">
-              <h1>{name}</h1>
+              <h1>{props.exercise.name}</h1>
             </FormGroup>
             <FormGroup className="form-group">
-              <h5>{problemText}</h5>
+              <h5>{props.exercise.text}</h5>
             </FormGroup>
             <FormGroup className="form-group">
               <h5>Example Input:</h5>
-              <h6>{exampleInput}</h6>
+              <h6>{props.exercise.testCases[0].input}</h6>
             </FormGroup>
             <FormGroup className="form-group">
               <h5>Example Output:</h5>
-              <h6>{exampleOutput}</h6>
+              <h6>{props.exercise.testCases[0].output}</h6>
             </FormGroup>
 
             <FormGroup className="form-group">
@@ -122,22 +100,18 @@ const ExerciseForm = (props) => {
                 mode="c_cpp"
                 theme="github"
                 name="problemCode"
-                onChange={(value) => setFieldValue("problemCode", value)}
                 fontSize={14}
                 showPrintMargin={true}
                 showGutter={true}
                 highlightActiveLine={true}
-                value={values.problemCode}
                 setOptions={{
-                  enableBasicAutocompletion: false,
-                  enableLiveAutocompletion: false,
-                  enableSnippets: false,
                   showLineNumbers: true,
                   tabSize: 2,
                 }}
+                onChange={(newValue) => setFieldValue("problemCode", newValue)}
               />
               <ErrorMessage
-                name="problemText"
+                name="problemCode"
                 className="d-block invalid-feedback"
                 component="span"
               />
@@ -153,11 +127,11 @@ const ExerciseForm = (props) => {
               {Array(10)
                 .fill()
                 .map((_, index) => (
-                  <Circles key={index} value={value} />
+                  <Circles key={index} value={null} />
                 ))}
             </div>
             <div>
-              <Score value={value} />
+              <Score value={null} />
             </div>
 
             <div
@@ -167,13 +141,7 @@ const ExerciseForm = (props) => {
                 marginTop: 10,
               }}
             >
-              <Button
-                variant="danger"
-                size="lg"
-                block="block"
-                type="submit"
-                disabled={isSubmitting}
-              >
+              <Button variant="danger" size="lg" block="block" type="submit">
                 {props.children}
               </Button>
             </div>

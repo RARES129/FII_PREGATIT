@@ -14,7 +14,7 @@ const CreateProblem = () => {
   // onSubmit handler
   const onSubmit = (Object) => {
     axios
-      .post("http://localhost:4000/users/create-problem", Object)
+      .post("http://localhost:4000/users/create-exercise", Object)
       .then((res) => {
         if (res.status === 200) {
           alert("Problem successfully created");
@@ -43,6 +43,5 @@ const CreateProblem = () => {
     </>
   );
 };
-
 
 export default CreateProblem;

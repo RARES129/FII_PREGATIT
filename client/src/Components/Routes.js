@@ -6,11 +6,11 @@ import UserList from "../Pages/UserList/user-list.component.js";
 import Login from "../Pages/Login/login.component.js";
 import Logout from "../Components/Logout";
 import NotFound from "../Pages/NotFound/NotFound.js";
-import Training from "../Pages/Training/training.component.js";
 import ForgotPassword from "../Pages/ForgotPassword/Forgot.component.js";
 import ResetPassword from "../Pages/ForgotPassword/Reset.component.js";
-import CreateProblem from "../Pages/Create problem/create.problem.component.js";
+import CreateProblem from "../Pages/CreateProblem/create.problem.component.js";
 import Exercise from "../Pages/ExercisePage/exercise.component.js";
+import ProblemList from "../Pages/ProblemList/problem.list.component.js";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -23,7 +23,6 @@ const PublicRoute = ({ isLoggedIn, children }) => {
 const AppRoutes = ({ isLoggedIn }) => (
   <Routes>
     <Route path="/" element={<Home />} />
-    <Route path="/problem-list" element={<Training />} />
     <Route
       path="/register"
       element={
@@ -65,10 +64,19 @@ const AppRoutes = ({ isLoggedIn }) => (
       }
     />
     <Route
-      path="/exercise/:token"
+      path="/exercise/:id"
+      element={
+        <Exercise />
+        // <PrivateRoute isLoggedIn={isLoggedIn}>
+        //   <Exercise />
+        // </PrivateRoute>
+      }
+    />
+    <Route
+      path="/problem-list"
       element={
         <PrivateRoute isLoggedIn={isLoggedIn}>
-          <Exercise />
+          <ProblemList />
         </PrivateRoute>
       }
     />
