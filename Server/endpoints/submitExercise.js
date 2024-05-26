@@ -6,19 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
-
-const testCases = [
-  { input: "1\n", output: "1 " },
-  { input: "2\n", output: "1 2 " },
-  { input: "3\n", output: "1 2 3 " },
-  { input: "4\n", output: "1 2 3 4 " },
-  { input: "5\n", output: "1 2 3 4 5 " },
-  { input: "6\n", output: "1 2 3 4 5 6 " },
-  { input: "7\n", output: "1 2 3 4 5 6 7 " },
-  { input: "8\n", output: "1 2 3 4 5 6 7 8 " },
-  { input: "9\n", output: "1 2 3 4 5 6 7 8 9 " },
-  { input: "10\n", output: "1 2 3 4 5 6 7 8 9 10 " },
-];
+const Exercise = require("../models/exercise.model");
 
 const queue = [];
 let activeProcesses = 0;
@@ -26,7 +14,16 @@ const MAX_PROCESSES = 10;
 
 router.post("/:id", async (req, res, next) => {
   console.log("Received submission for exercise", req.params.id);
-  queue.push({ req, res });
+
+  const exercise = await Exercise.findOne({ id: req.params.id });
+  if (!exercise) {
+    res.status(404).json({ error: "Exercise not found" });
+    return;
+  }
+
+  const testCases = exercise.testCases;
+
+  queue.push({ req, res, testCases });
   processQueue();
 });
 
@@ -36,7 +33,7 @@ function processQueue() {
   }
 
   activeProcesses++;
-  const { req, res } = queue.shift();
+  const { req, res, testCases } = queue.shift();
   const code = req.body.code;
   console.log("Processing code:", code);
   const tempDir = path.join(__dirname, "..", "temp");
