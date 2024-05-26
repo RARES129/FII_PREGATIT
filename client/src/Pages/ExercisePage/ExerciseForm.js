@@ -3,6 +3,7 @@ import { Formik, Form, ErrorMessage } from "formik";
 import { FormGroup, Button } from "react-bootstrap";
 import AceEditor from "react-ace";
 import Spinner from "react-bootstrap/Spinner";
+import { useState } from "react";
 
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
@@ -73,9 +74,22 @@ const Circles = ({ value }) => {
 };
 
 const ExerciseForm = (props) => {
+  const [isEdited, setIsEdited] = useState(false);
+
+  const handleAceEditorChange = (newValue, setFieldValue) => {
+    setIsEdited(true);
+    setFieldValue("problemCode", newValue);
+  };
+
   return (
     <div className="form-wrapper-problem">
-      <Formik {...props}>
+      <Formik
+        {...props}
+        onSubmit={(values, actions) => {
+          props.onSubmit(values, actions); // call the onSubmit prop passed to ExerciseForm
+          setIsEdited(false); // reset isEdited state to false after form submission
+        }}
+      >
         {({ setFieldValue }) => (
           <Form>
             <FormGroup className="form-group">
@@ -109,7 +123,9 @@ const ExerciseForm = (props) => {
                   showLineNumbers: true,
                   tabSize: 2,
                 }}
-                onChange={(newValue) => setFieldValue("problemCode", newValue)}
+                onChange={(newValue) =>
+                  handleAceEditorChange(newValue, setFieldValue)
+                }
               />
               <ErrorMessage
                 name="problemCode"
@@ -147,7 +163,13 @@ const ExerciseForm = (props) => {
                 marginTop: 10,
               }}
             >
-              <Button variant="danger" size="lg" block="block" type="submit">
+              <Button
+                variant="danger"
+                size="lg"
+                block="block"
+                type="submit"
+                disabled={props.loading || !isEdited}
+              >
                 {props.children}
               </Button>
             </div>

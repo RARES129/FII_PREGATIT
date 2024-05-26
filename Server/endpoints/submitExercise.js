@@ -2,7 +2,7 @@ let express = require("express"),
   router = express.Router();
 exerciseSchema = require("../models/exercise.model");
 const { exec, spawn } = require("child_process");
-const fs = require("fs").promises;
+const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { v4: uuidv4 } = require("uuid");
@@ -40,109 +40,129 @@ function processQueue() {
   const code = req.body.code;
   console.log("Processing code:", code);
   const tempDir = path.join(__dirname, "..", "temp");
-  fs.mkdir(tempDir, { recursive: true }).catch(console.error);
+  fs.promises.mkdir(tempDir, { recursive: true }).catch(console.error);
   const uniqueId = uuidv4();
   const filename = path.join(tempDir, `temp_${uniqueId}.cpp`);
   const outputFilename = path.join(tempDir, `temp_${uniqueId}.out`);
   const executable =
     os.platform() === "win32" ? `${outputFilename}` : `./${outputFilename}`;
 
-  fs.writeFile(filename, code)
+  fs.promises
+    .writeFile(filename, code)
     .then(() => {
       console.log("File written successfully");
 
-      exec(
-        `g++ ${filename} -o ${outputFilename}`,
-        (compileError, compileStdout, compileStderr) => {
-          if (compileError) {
-            console.error("Compilation error:", compileError);
-            console.error("stderr:", compileStderr);
-            res.json({ score: 0 });
-            cleanup(filename, outputFilename);
-            return;
-          }
+      const compile = spawn(`g++`, [
+        `${filename}`,
+        `-o`,
+        `${outputFilename}`,
+        `-mconsole`,
+      ]);
 
-          console.log("Compilation success");
+      // Set a timeout for the compilation process
+      let compileTimeoutId = setTimeout(() => {
+        compile.kill(); // This will terminate the process
+        console.log(`Compilation process timed out and was terminated`);
+      }, 5000); // Timeout is set to 5 seconds
 
-          const testPromises = testCases.map((testCase, index) => {
-            return new Promise((resolve, reject) => {
+      compile.stdout.on("data", (data) => {
+        console.log(`stdout: ${data}`);
+      });
+
+      compile.stderr.on("data", (data) => {
+        console.error(`stderr: ${data}`);
+      });
+
+      compile.on("close", (code) => {
+        clearTimeout(compileTimeoutId); // Clear the timeout if the process ends before the timeout
+
+        if (code !== 0) {
+          console.error("Compilation error:", code);
+          res.json({ score: 0 });
+          cleanup(filename, outputFilename);
+          return;
+        }
+
+        console.log("Compilation success");
+
+        const testPromises = testCases.map((testCase, index) => {
+          return new Promise((resolve, reject) => {
+            console.log(
+              `Starting test case ${
+                index + 1
+              }: input = ${testCase.input.trim()}`
+            );
+
+            const child = spawn(executable);
+
+            // Set a timeout for the child process
+            let timeoutId = setTimeout(() => {
+              child.kill(); // This will terminate the process
               console.log(
-                `Starting test case ${
-                  index + 1
-                }: input = ${testCase.input.trim()}`
+                `Test case ${index + 1} timed out and was terminated`
               );
+            }, 5000); // Timeout is set to 5 seconds
 
-              const child = spawn(executable);
+            let outputData = "";
+            let errorData = "";
 
-              // Set a timeout for the child process
-              let timeoutId = setTimeout(() => {
-                child.kill(); // This will terminate the process
-                console.log(
-                  `Test case ${index + 1} timed out and was terminated`
+            child.stdin.write(testCase.input);
+            child.stdin.end();
+
+            child.stdout.on("data", (data) => {
+              outputData += data.toString();
+            });
+
+            child.stderr.on("data", (data) => {
+              errorData += data.toString();
+            });
+
+            child.on("close", (code) => {
+              clearTimeout(timeoutId); // Clear the timeout if the process ends before the timeout
+              if (code !== 0) {
+                console.error(
+                  `Test case ${index + 1} execution error:`,
+                  errorData
                 );
-              }, 5000); // Timeout is set to 5 seconds
-
-              let outputData = "";
-              let errorData = "";
-
-              child.stdin.write(testCase.input);
-              child.stdin.end();
-
-              child.stdout.on("data", (data) => {
-                outputData += data.toString();
-              });
-
-              child.stderr.on("data", (data) => {
-                errorData += data.toString();
-              });
-
-              child.on("close", (code) => {
-                clearTimeout(timeoutId); // Clear the timeout if the process ends before the timeout
-                if (code !== 0) {
-                  console.error(
-                    `Test case ${index + 1} execution error:`,
-                    errorData
-                  );
-                  console.log(`Test case ${index + 1} completed: failure`);
-                  resolve({
-                    input: testCase.input,
-                    expected: testCase.output,
-                    output: errorData,
-                    success: false,
-                  });
-                } else {
-                  const trimmedOutput = outputData.trim();
-                  const success = trimmedOutput === testCase.output.trim();
-                  console.log(
-                    `Test case ${index + 1} completed: ${
-                      success ? "success" : "failure"
-                    }`
-                  );
-                  resolve({
-                    input: testCase.input,
-                    expected: testCase.output,
-                    output: trimmedOutput,
-                    success,
-                  });
-                }
-              });
+                console.log(`Test case ${index + 1} completed: failure`);
+                resolve({
+                  input: testCase.input,
+                  expected: testCase.output,
+                  output: errorData,
+                  success: false,
+                });
+              } else {
+                const trimmedOutput = outputData.trim();
+                const success = trimmedOutput === testCase.output.trim();
+                console.log(
+                  `Test case ${index + 1} completed: ${
+                    success ? "success" : "failure"
+                  }`
+                );
+                resolve({
+                  input: testCase.input,
+                  expected: testCase.output,
+                  output: trimmedOutput,
+                  success,
+                });
+              }
             });
           });
+        });
 
-          Promise.all(testPromises)
-            .then((results) => {
-              const successCount = results.filter(
-                (result) => result.success
-              ).length;
-              const score = (successCount / testCases.length) * 100;
-              res.json({ results, score });
-            })
-            .finally(() => {
-              cleanup(filename, outputFilename);
-              console.log("Cleanup called");
-            });
-        }
-      );
+        Promise.all(testPromises)
+          .then((results) => {
+            const successCount = results.filter(
+              (result) => result.success
+            ).length;
+            const score = (successCount / testCases.length) * 100;
+            res.json({ results, score });
+          })
+          .finally(() => {
+            cleanup(filename, outputFilename);
+            console.log("Cleanup called");
+          });
+      });
     })
     .catch((writeError) => {
       console.error("Error writing file:", writeError);
@@ -155,17 +175,24 @@ function processQueue() {
 }
 
 function cleanup(filename, outputFilename) {
-  fs.unlink(filename)
-    .then(() => {
-      console.log("temp.cpp deleted successfully");
-      return fs.unlink(outputFilename);
-    })
-    .then(() => {
-      console.log("Executable deleted successfully");
-    })
-    .catch((unlinkError) => {
-      console.error("Error deleting file:", unlinkError);
-    });
+  if (fs.existsSync(filename)) {
+    fs.promises
+      .unlink(filename)
+      .then(() => {
+        console.log(".cpp file deleted successfully");
+        if (fs.existsSync(outputFilename)) {
+          return fs.promises.unlink(outputFilename);
+        }
+      })
+      .then(() => {
+        if (fs.existsSync(outputFilename)) {
+          console.log("Executable deleted successfully");
+        }
+      })
+      .catch((unlinkError) => {
+        console.error("Error deleting file:", unlinkError);
+      });
+  }
 }
 
 module.exports = router;
