@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const Exercise = require("../models/exercise.model");
-const { exec } = require("child_process");
+const { spawn } = require("child_process");
 
 const queue = [];
 let activeProcesses = 0;
@@ -47,10 +47,21 @@ async function processQueue() {
     console.log("File written successfully");
 
     // Compile the C++ code
-    const compileCommand = `docker run --rm -v "${taskDir}:/usr/src/app" cpp-sandbox g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
-    exec(compileCommand, async (compileError, stdout, stderr) => {
-      if (compileError) {
-        console.error(`Compilation error: ${stderr}`);
+    const compileCommand = `g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
+    const compileProcess = spawn("docker", [
+      "run",
+      "--rm",
+      "-v",
+      `${taskDir}:/usr/src/app`,
+      "cpp-sandbox",
+      "sh",
+      "-c",
+      compileCommand,
+    ]);
+
+    compileProcess.on("close", async (code) => {
+      if (code !== 0) {
+        console.error(`Compilation error with exit code ${code}`);
         res.json({ results: [], score: 0 });
         cleanup(taskDir);
         activeProcesses--;
@@ -61,7 +72,7 @@ async function processQueue() {
       console.log("Compilation successful");
 
       const testPromises = testCases.map((testCase, index) => {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (resolve) => {
           console.log(
             `Starting test case ${index + 1}: input = ${testCase.input.trim()}`
           );
@@ -69,9 +80,45 @@ async function processQueue() {
           const inputFilename = path.join(taskDir, `input_${index}.txt`);
           await fs.promises.writeFile(inputFilename, testCase.input);
 
-          const runCommand = `docker run --rm -v "${taskDir}:/usr/src/app" cpp-sandbox sh -c "/usr/src/app/a.out < /usr/src/app/input_${index}.txt"`;
-          exec(runCommand, (runError, stdout, stderr) => {
-            if (runError) {
+          const containerName = `cpp_sandbox_${uniqueId}_${index}`;
+          const runCommand = `/usr/src/app/a.out < /usr/src/app/input_${index}.txt`;
+          const dockerProcess = spawn("docker", [
+            "run",
+            "--name",
+            containerName,
+            "--rm",
+            "-v",
+            `${taskDir}:/usr/src/app`,
+            "cpp-sandbox",
+            "sh",
+            "-c",
+            runCommand,
+          ]);
+
+          let stdout = "";
+          let stderr = "";
+
+          dockerProcess.stdout.on("data", (data) => {
+            stdout += data.toString();
+          });
+
+          dockerProcess.stderr.on("data", (data) => {
+            stderr += data.toString();
+          });
+
+          const timeoutId = setTimeout(() => {
+            spawn("docker", ["rm", "-f", containerName]);
+            resolve({
+              input: testCase.input,
+              expected: testCase.output,
+              output: "Timed out",
+              success: false,
+            });
+          }, 10000);
+
+          dockerProcess.on("close", (code) => {
+            clearTimeout(timeoutId);
+            if (code !== 0) {
               console.error(`Test case ${index + 1} execution error:`, stderr);
               resolve({
                 input: testCase.input,
@@ -103,14 +150,14 @@ async function processQueue() {
       const score = (successCount / testCases.length) * 100;
       res.json({ results, score });
 
-      cleanup(taskDir); // Ensure cleanup is called after all operations are complete
+      setTimeout(() => cleanup(taskDir), 500); // Ensure cleanup is called after all operations are complete, with a delay
       activeProcesses--;
       processQueue();
     });
   } catch (writeError) {
     console.error("Error writing file:", writeError);
     res.json({ results: [], score: 0 });
-    cleanup(taskDir); // Ensure cleanup is called in case of an error
+    setTimeout(() => cleanup(taskDir), 500); // Ensure cleanup is called in case of an error, with a delay
     activeProcesses--;
     processQueue();
   }
@@ -119,7 +166,12 @@ async function processQueue() {
 async function cleanup(taskDir) {
   if (fs.existsSync(taskDir)) {
     try {
-      await fs.promises.rm(taskDir, { recursive: true, force: true });
+      // Ensure all files are deleted first
+      const files = await fs.promises.readdir(taskDir);
+      for (const file of files) {
+        await fs.promises.unlink(path.join(taskDir, file));
+      }
+      await fs.promises.rmdir(taskDir, { recursive: true });
       console.log("Task directory deleted successfully");
     } catch (unlinkError) {
       console.error("Error deleting task directory:", unlinkError);
