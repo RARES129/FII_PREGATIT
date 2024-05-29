@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const Exercise = require("../models/exercise.model");
-const { spawn } = require("child_process");
+const { exec, spawn } = require("child_process");
 
 const queue = [];
 let activeProcesses = 0;
@@ -63,7 +63,7 @@ async function processQueue() {
       if (code !== 0) {
         console.error(`Compilation error with exit code ${code}`);
         res.json({ results: [], score: 0 });
-        cleanup(taskDir);
+        await cleanup(taskDir);
         activeProcesses--;
         processQueue();
         return;
@@ -107,14 +107,23 @@ async function processQueue() {
           });
 
           const timeoutId = setTimeout(() => {
-            spawn("docker", ["rm", "-f", containerName]);
-            resolve({
-              input: testCase.input,
-              expected: testCase.output,
-              output: "Timed out",
-              success: false,
+            exec(`docker rm -f ${containerName}`, (err) => {
+              if (err) {
+                console.error(
+                  `Error removing container ${containerName}:`,
+                  err
+                );
+              } else {
+                console.log(`Container ${containerName} removed successfully.`);
+              }
+              resolve({
+                input: testCase.input,
+                expected: testCase.output,
+                output: "Timed out",
+                success: false,
+              });
             });
-          }, 10000);
+          }, 5000);
 
           dockerProcess.on("close", (code) => {
             clearTimeout(timeoutId);
@@ -150,14 +159,14 @@ async function processQueue() {
       const score = (successCount / testCases.length) * 100;
       res.json({ results, score });
 
-      setTimeout(() => cleanup(taskDir), 500); // Ensure cleanup is called after all operations are complete, with a delay
+      await cleanup(taskDir); // Ensure cleanup is called after all operations are complete
       activeProcesses--;
       processQueue();
     });
   } catch (writeError) {
     console.error("Error writing file:", writeError);
     res.json({ results: [], score: 0 });
-    setTimeout(() => cleanup(taskDir), 500); // Ensure cleanup is called in case of an error, with a delay
+    await cleanup(taskDir); // Ensure cleanup is called in case of an error
     activeProcesses--;
     processQueue();
   }
@@ -171,7 +180,7 @@ async function cleanup(taskDir) {
       for (const file of files) {
         await fs.promises.unlink(path.join(taskDir, file));
       }
-      await fs.promises.rmdir(taskDir, { recursive: true });
+      await fs.promises.rmdir(taskDir);
       console.log("Task directory deleted successfully");
     } catch (unlinkError) {
       console.error("Error deleting task directory:", unlinkError);
