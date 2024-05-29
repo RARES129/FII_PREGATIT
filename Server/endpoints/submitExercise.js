@@ -1,12 +1,10 @@
 let express = require("express"),
   router = express.Router();
-exerciseSchema = require("../models/exercise.model");
-const { exec, spawn } = require("child_process");
 const fs = require("fs");
 const path = require("path");
-const os = require("os");
 const { v4: uuidv4 } = require("uuid");
 const Exercise = require("../models/exercise.model");
+const { exec } = require("child_process");
 
 const queue = [];
 let activeProcesses = 0;
@@ -27,7 +25,7 @@ router.post("/:id", async (req, res, next) => {
   processQueue();
 });
 
-function processQueue() {
+async function processQueue() {
   if (activeProcesses >= MAX_PROCESSES || queue.length === 0) {
     return;
   }
@@ -37,158 +35,95 @@ function processQueue() {
   const code = req.body.code;
   console.log("Processing code:", code);
   const tempDir = path.join(__dirname, "..", "temp");
-  fs.promises.mkdir(tempDir, { recursive: true }).catch(console.error);
+  await fs.promises.mkdir(tempDir, { recursive: true });
   const uniqueId = uuidv4();
-  const filename = path.join(tempDir, `temp_${uniqueId}.cpp`);
-  const outputFilename = path.join(tempDir, `temp_${uniqueId}.out`);
-  const executable =
-    os.platform() === "win32" ? `${outputFilename}` : `./${outputFilename}`;
+  const taskDir = path.join(tempDir, `task_${uniqueId}`);
+  await fs.promises.mkdir(taskDir, { recursive: true });
+  const filename = path.join(taskDir, `temp.cpp`);
+  const executable = path.join(taskDir, `a.out`);
 
-  fs.promises
-    .writeFile(filename, code)
-    .then(() => {
-      console.log("File written successfully");
+  try {
+    await fs.promises.writeFile(filename, code);
+    console.log("File written successfully");
 
-      const compile = spawn(`g++`, [
-        `${filename}`,
-        `-o`,
-        `${outputFilename}`,
-        `-mconsole`,
-      ]);
+    // Compile the C++ code
+    const compileCommand = `docker run --rm -v "${taskDir}:/usr/src/app" cpp-sandbox g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
+    exec(compileCommand, async (compileError, stdout, stderr) => {
+      if (compileError) {
+        console.error(`Compilation error: ${stderr}`);
+        res.json({ results: [], score: 0 });
+        cleanup(taskDir);
+        activeProcesses--;
+        processQueue();
+        return;
+      }
 
-      // Set a timeout for the compilation process
-      let compileTimeoutId = setTimeout(() => {
-        compile.kill(); // This will terminate the process
-        console.log(`Compilation process timed out and was terminated`);
-      }, 5000); // Timeout is set to 5 seconds
+      console.log("Compilation successful");
 
-      compile.stdout.on("data", (data) => {
-        console.log(`stdout: ${data}`);
-      });
+      const testPromises = testCases.map((testCase, index) => {
+        return new Promise(async (resolve, reject) => {
+          console.log(
+            `Starting test case ${index + 1}: input = ${testCase.input.trim()}`
+          );
 
-      compile.stderr.on("data", (data) => {
-        console.error(`stderr: ${data}`);
-      });
+          const inputFilename = path.join(taskDir, `input_${index}.txt`);
+          await fs.promises.writeFile(inputFilename, testCase.input);
 
-      compile.on("close", (code) => {
-        clearTimeout(compileTimeoutId); // Clear the timeout if the process ends before the timeout
-
-        if (code !== 0) {
-          console.error("Compilation error:", code);
-          res.json({ score: 0 });
-          cleanup(filename, outputFilename);
-          return;
-        }
-
-        console.log("Compilation success");
-
-        const testPromises = testCases.map((testCase, index) => {
-          return new Promise((resolve, reject) => {
-            console.log(
-              `Starting test case ${
-                index + 1
-              }: input = ${testCase.input.trim()}`
-            );
-
-            const child = spawn(executable);
-
-            // Set a timeout for the child process
-            let timeoutId = setTimeout(() => {
-              child.kill(); // This will terminate the process
+          const runCommand = `docker run --rm -v "${taskDir}:/usr/src/app" cpp-sandbox sh -c "/usr/src/app/a.out < /usr/src/app/input_${index}.txt"`;
+          exec(runCommand, (runError, stdout, stderr) => {
+            if (runError) {
+              console.error(`Test case ${index + 1} execution error:`, stderr);
+              resolve({
+                input: testCase.input,
+                expected: testCase.output,
+                output: stderr,
+                success: false,
+              });
+            } else {
+              const trimmedOutput = stdout.trim();
+              const success = trimmedOutput === testCase.output.trim();
               console.log(
-                `Test case ${index + 1} timed out and was terminated`
+                `Test case ${index + 1} completed: ${
+                  success ? "success" : "failure"
+                }`
               );
-            }, 5000); // Timeout is set to 5 seconds
-
-            let outputData = "";
-            let errorData = "";
-
-            child.stdin.write(testCase.input);
-            child.stdin.end();
-
-            child.stdout.on("data", (data) => {
-              outputData += data.toString();
-            });
-
-            child.stderr.on("data", (data) => {
-              errorData += data.toString();
-            });
-
-            child.on("close", (code) => {
-              clearTimeout(timeoutId); // Clear the timeout if the process ends before the timeout
-              if (code !== 0) {
-                console.error(
-                  `Test case ${index + 1} execution error:`,
-                  errorData
-                );
-                console.log(`Test case ${index + 1} completed: failure`);
-                resolve({
-                  input: testCase.input,
-                  expected: testCase.output,
-                  output: errorData,
-                  success: false,
-                });
-              } else {
-                const trimmedOutput = outputData.trim();
-                const success = trimmedOutput === testCase.output.trim();
-                console.log(
-                  `Test case ${index + 1} completed: ${
-                    success ? "success" : "failure"
-                  }`
-                );
-                resolve({
-                  input: testCase.input,
-                  expected: testCase.output,
-                  output: trimmedOutput,
-                  success,
-                });
-              }
-            });
+              resolve({
+                input: testCase.input,
+                expected: testCase.output,
+                output: trimmedOutput,
+                success,
+              });
+            }
           });
         });
-
-        Promise.all(testPromises)
-          .then((results) => {
-            const successCount = results.filter(
-              (result) => result.success
-            ).length;
-            const score = (successCount / testCases.length) * 100;
-            res.json({ results, score });
-          })
-          .finally(() => {
-            cleanup(filename, outputFilename);
-            console.log("Cleanup called");
-          });
       });
-    })
-    .catch((writeError) => {
-      console.error("Error writing file:", writeError);
-      res.status(500).json({ output: "Error writing file" });
-    })
-    .finally(() => {
+
+      const results = await Promise.all(testPromises);
+      const successCount = results.filter((result) => result.success).length;
+      const score = (successCount / testCases.length) * 100;
+      res.json({ results, score });
+
+      cleanup(taskDir); // Ensure cleanup is called after all operations are complete
       activeProcesses--;
       processQueue();
     });
+  } catch (writeError) {
+    console.error("Error writing file:", writeError);
+    res.json({ results: [], score: 0 });
+    cleanup(taskDir); // Ensure cleanup is called in case of an error
+    activeProcesses--;
+    processQueue();
+  }
 }
 
-function cleanup(filename, outputFilename) {
-  if (fs.existsSync(filename)) {
-    fs.promises
-      .unlink(filename)
-      .then(() => {
-        console.log(".cpp file deleted successfully");
-        if (fs.existsSync(outputFilename)) {
-          return fs.promises.unlink(outputFilename);
-        }
-      })
-      .then(() => {
-        if (fs.existsSync(outputFilename)) {
-          console.log("Executable deleted successfully");
-        }
-      })
-      .catch((unlinkError) => {
-        console.error("Error deleting file:", unlinkError);
-      });
+async function cleanup(taskDir) {
+  if (fs.existsSync(taskDir)) {
+    try {
+      await fs.promises.rm(taskDir, { recursive: true, force: true });
+      console.log("Task directory deleted successfully");
+    } catch (unlinkError) {
+      console.error("Error deleting task directory:", unlinkError);
+    }
   }
 }
 
