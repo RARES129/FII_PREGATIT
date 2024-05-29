@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const Exercise = require("../models/exercise.model");
-const { exec, spawn } = require("child_process");
+const { spawn, exec } = require("child_process");
 
 const queue = [];
 let activeProcesses = 0;
@@ -48,18 +48,9 @@ async function processQueue() {
 
     // Compile the C++ code
     const compileCommand = `g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
-    const compileProcess = spawn("docker", [
-      "run",
-      "--rm",
-      "-v",
-      `${taskDir}:/usr/src/app`,
-      "cpp-sandbox",
-      "sh",
-      "-c",
-      compileCommand,
-    ]);
+    const compileProcess = spawn('docker', ['run', '--rm', '-v', `${taskDir}:/usr/src/app`, 'cpp-sandbox', 'sh', '-c', compileCommand]);
 
-    compileProcess.on("close", async (code) => {
+    compileProcess.on('close', async (code) => {
       if (code !== 0) {
         console.error(`Compilation error with exit code ${code}`);
         res.json({ results: [], score: 0 });
@@ -73,60 +64,49 @@ async function processQueue() {
 
       const testPromises = testCases.map((testCase, index) => {
         return new Promise(async (resolve) => {
-          console.log(
-            `Starting test case ${index + 1}: input = ${testCase.input.trim()}`
-          );
+          console.log(`Starting test case ${index + 1}: input = ${testCase.input.trim()}`);
 
           const inputFilename = path.join(taskDir, `input_${index}.txt`);
           await fs.promises.writeFile(inputFilename, testCase.input);
 
           const containerName = `cpp_sandbox_${uniqueId}_${index}`;
           const runCommand = `/usr/src/app/a.out < /usr/src/app/input_${index}.txt`;
-          const dockerProcess = spawn("docker", [
-            "run",
-            "--name",
-            containerName,
-            "--rm",
-            "-v",
-            `${taskDir}:/usr/src/app`,
-            "cpp-sandbox",
-            "sh",
-            "-c",
-            runCommand,
-          ]);
+          const dockerProcess = spawn('docker', ['run', '--name', containerName, '--rm', '-v', `${taskDir}:/usr/src/app`, 'cpp-sandbox', 'sh', '-c', runCommand]);
 
-          let stdout = "";
-          let stderr = "";
+          let stdout = '';
+          let stderr = '';
+          let timedOut = false;
 
-          dockerProcess.stdout.on("data", (data) => {
+          dockerProcess.stdout.on('data', (data) => {
             stdout += data.toString();
           });
 
-          dockerProcess.stderr.on("data", (data) => {
+          dockerProcess.stderr.on('data', (data) => {
             stderr += data.toString();
           });
 
           const timeoutId = setTimeout(() => {
+            timedOut = true;
             exec(`docker rm -f ${containerName}`, (err) => {
               if (err) {
-                console.error(
-                  `Error removing container ${containerName}:`,
-                  err
-                );
+                console.error(`Error removing container ${containerName}:`, err);
               } else {
                 console.log(`Container ${containerName} removed successfully.`);
               }
               resolve({
                 input: testCase.input,
                 expected: testCase.output,
-                output: "Timed out",
+                output: "Time limit exceeded",
                 success: false,
               });
             });
           }, 5000);
 
-          dockerProcess.on("close", (code) => {
+          dockerProcess.on('close', (code) => {
             clearTimeout(timeoutId);
+            if (timedOut) {
+              return; // Already handled by the timeout
+            }
             if (code !== 0) {
               console.error(`Test case ${index + 1} execution error:`, stderr);
               resolve({
@@ -138,11 +118,7 @@ async function processQueue() {
             } else {
               const trimmedOutput = stdout.trim();
               const success = trimmedOutput === testCase.output.trim();
-              console.log(
-                `Test case ${index + 1} completed: ${
-                  success ? "success" : "failure"
-                }`
-              );
+              console.log(`Test case ${index + 1} completed: ${success ? "success" : "failure"}`);
               resolve({
                 input: testCase.input,
                 expected: testCase.output,
