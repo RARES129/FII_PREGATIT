@@ -1,20 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 
-const Admin = () => {
+const useAdmin = (shouldCheck) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingAdmin, setIsLoadingAdmin] = useState(true);
-  const effectRan = useRef(false);
 
   useEffect(() => {
-    if (effectRan.current) return;
+    if (!shouldCheck) {
+      setIsLoadingAdmin(false);
+      return;
+    }
+
     const checkAdmin = async () => {
       try {
         const response = await axios.get("http://localhost:4000/users/isAdmin");
         setIsAdmin(response.data);
       } catch (error) {
-        console.error("Eroare la verificarea stării de admin", error);
+        console.error("Error checking admin status", error);
         setIsAdmin(false);
       } finally {
         setIsLoadingAdmin(false);
@@ -22,10 +25,9 @@ const Admin = () => {
     };
 
     checkAdmin();
-    effectRan.current = true;
-  }, []);
+  }, [shouldCheck]);
 
   return { isAdmin, isLoadingAdmin };
 };
 
-export default Admin;
+export default useAdmin;

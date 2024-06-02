@@ -12,7 +12,6 @@ import CreateProblem from "../Pages/CreateProblem/create.problem.component.js";
 import Exercise from "../Pages/ExercisePage/exercise.component.js";
 import ProblemList from "../Pages/ProblemList/problem.list.component.js";
 import Profile from "../Pages/Profile/profile.component.js";
-import Admin from "./checkAdmin";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -22,16 +21,15 @@ const PublicRoute = ({ isLoggedIn, children }) => {
   return !isLoggedIn ? children : <Navigate to="/" replace />;
 };
 
-const AdminRoute = ({ children }) => {
-  const { isAdmin, isLoadingAdmin } = Admin();
+const AdminRoute = ({ isLoggedIn, isAdmin, children }) => {
 
-  if (isLoadingAdmin) {
-    return <div>Loading...</div>; // Show a loading indicator while checking admin status
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
   }
   return isAdmin ? children : <Navigate to="/" replace />;
 };
 
-const AppRoutes = ({ isLoggedIn }) => (
+const AppRoutes = ({ isLoggedIn, isAdmin }) => (
   <Routes>
     <Route
       path="/profile"
@@ -53,7 +51,7 @@ const AppRoutes = ({ isLoggedIn }) => (
     <Route
       path="/user-list"
       element={
-        <AdminRoute>
+        <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin} >
           <UserList />
         </AdminRoute>
       }
@@ -85,7 +83,6 @@ const AppRoutes = ({ isLoggedIn }) => (
     <Route
       path="/exercise/:id"
       element={
-        // <Exercise />
         <PrivateRoute isLoggedIn={isLoggedIn}>
           <Exercise />
         </PrivateRoute>
@@ -94,7 +91,6 @@ const AppRoutes = ({ isLoggedIn }) => (
     <Route
       path="/problem-list"
       element={
-        // <ProblemList />
         <PrivateRoute isLoggedIn={isLoggedIn}>
           <ProblemList />
         </PrivateRoute>
@@ -111,9 +107,9 @@ const AppRoutes = ({ isLoggedIn }) => (
     <Route
       path="/create-problem"
       element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
+        <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
           <CreateProblem />
-        </PrivateRoute>
+        </AdminRoute>
       }
     />
     <Route path="*" element={<NotFound />} />

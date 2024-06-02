@@ -8,11 +8,9 @@ router.get("/", async (req, res, next) => {
       _id: req.session.userId,
     });
     if (!user) {
-      console.log("User not found");
       return res.status(404).send("User not found");
     }
 
-    console.log("User: ", user.admin);
     res.json(user.admin);
   } catch (error) {
     next(error);

@@ -5,10 +5,12 @@ import { BrowserRouter as Router } from "react-router-dom";
 import NavBar from "./Components/NavBar";
 import AppRoutes from "./Components/Routes";
 import LoggedIn from "./Components/checkLoggedIn";
+import Admin from "./Components/checkAdmin";
 
 const App = () => {
   const { isLoggedIn, isLoading } = LoggedIn();
-  if (isLoading) {
+  const { isAdmin, isLoadingAdmin } = Admin(isLoggedIn);
+  if (isLoading || isLoadingAdmin) {
     return null;
   }
 
@@ -16,9 +18,9 @@ const App = () => {
     <Router>
       <div className="App">
         <header className="App-header">
-          <NavBar isLoggedIn={isLoggedIn} />
+          <NavBar isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
         </header>
-        <AppRoutes isLoggedIn={isLoggedIn} />
+        <AppRoutes isLoggedIn={isLoggedIn} isAdmin={isAdmin} />
       </div>
     </Router>
   );

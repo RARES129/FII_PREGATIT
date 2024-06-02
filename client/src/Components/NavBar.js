@@ -2,7 +2,7 @@ import React from "react";
 import { Nav, Navbar, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-const NavBar = ({ isLoggedIn }) => (
+const NavBar = ({ isLoggedIn, isAdmin }) => (
   <Navbar bg="dark" variant="dark" fixed="top">
     <Container>
       <Navbar.Brand>
@@ -13,16 +13,25 @@ const NavBar = ({ isLoggedIn }) => (
 
       {isLoggedIn && (
         <Nav className="justify-content-end">
-          {/* <Nav>
-            <Link to={"/user-list"} className="nav-link">
-              Student List
-            </Link>
-          </Nav> */}
           <Nav>
             <Link to={"/problem-list"} className="nav-link">
               Exercises
             </Link>
           </Nav>
+          {isAdmin && (
+            <>
+              <Nav>
+                <Link to={"/create-problem"} className="nav-link">
+                  Create Exercise
+                </Link>
+              </Nav>
+              <Nav>
+                <Link to={"/user-list"} className="nav-link">
+                  User List
+                </Link>
+              </Nav>
+            </>
+          )}
           <Nav>
             <Link to={"/logout"} className="nav-link">
               Logout
