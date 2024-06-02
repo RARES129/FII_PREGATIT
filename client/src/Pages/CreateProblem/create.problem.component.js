@@ -8,9 +8,12 @@ const CreateProblem = () => {
   const [formValues, setFormValues] = useState({
     problemName: "",
     problemText: "",
+    problemType: "",
     testInputs: Array(10).fill(""),
     testOutputs: Array(10).fill(""),
   });
+
+  const problemTypes = ["Vectors", "Graphs", "Character Strings"]; // List of problem types
   // onSubmit handler
   const onSubmit = (Object) => {
     axios
@@ -37,6 +40,7 @@ const CreateProblem = () => {
         initialValues={formValues}
         onSubmit={onSubmit}
         enableReinitialize
+        problemTypes={problemTypes}
       >
         Create
       </CreateProblemForm>

@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
 const Exercise = require("../models/exercise.model");
+const Sources = require("../models/source.model");
 const { spawn, exec } = require("child_process");
 
 const queue = [];
@@ -11,18 +12,23 @@ let activeProcesses = 0;
 const MAX_PROCESSES = 10;
 
 router.post("/:id", async (req, res, next) => {
-  console.log("Received submission for exercise", req.params.id);
+  if (req.session && req.session.userId) {
+    console.log("Received submission for exercise", req.params.id);
 
-  const exercise = await Exercise.findOne({ id: req.params.id });
-  if (!exercise) {
-    res.status(404).json({ error: "Exercise not found" });
-    return;
+    const exercise = await Exercise.findOne({ id: req.params.id });
+    if (!exercise) {
+      res.status(404).json("Exercise not found");
+      return;
+    }
+
+    const testCases = exercise.testCases;
+    const type = exercise.type;
+
+    queue.push({ req, res, testCases, type });
+    processQueue();
+  } else {
+    res.status(401).json("Unauthorized !!!");
   }
-
-  const testCases = exercise.testCases;
-
-  queue.push({ req, res, testCases });
-  processQueue();
 });
 
 async function processQueue() {
@@ -31,7 +37,7 @@ async function processQueue() {
   }
 
   activeProcesses++;
-  const { req, res, testCases } = queue.shift();
+  const { req, res, testCases, type } = queue.shift();
   const code = req.body.code;
   console.log("Processing code:", code);
   const tempDir = path.join(__dirname, "..", "temp");
@@ -48,12 +54,21 @@ async function processQueue() {
 
     // Compile the C++ code
     const compileCommand = `g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
-    const compileProcess = spawn('docker', ['run', '--rm', '-v', `${taskDir}:/usr/src/app`, 'cpp-sandbox', 'sh', '-c', compileCommand]);
+    const compileProcess = spawn("docker", [
+      "run",
+      "--rm",
+      "-v",
+      `${taskDir}:/usr/src/app`,
+      "cpp-sandbox",
+      "sh",
+      "-c",
+      compileCommand,
+    ]);
 
-    compileProcess.on('close', async (code) => {
+    compileProcess.on("close", async (code) => {
       if (code !== 0) {
         console.error(`Compilation error with exit code ${code}`);
-        res.json({ results: [], score: 0 });
+        res.status(400).send("Compilation error");
         await cleanup(taskDir);
         activeProcesses--;
         processQueue();
@@ -64,24 +79,37 @@ async function processQueue() {
 
       const testPromises = testCases.map((testCase, index) => {
         return new Promise(async (resolve) => {
-          console.log(`Starting test case ${index + 1}: input = ${testCase.input.trim()}`);
+          console.log(
+            `Starting test case ${index + 1}: input = ${testCase.input.trim()}`
+          );
 
           const inputFilename = path.join(taskDir, `input_${index}.txt`);
           await fs.promises.writeFile(inputFilename, testCase.input);
 
           const containerName = `cpp_sandbox_${uniqueId}_${index}`;
           const runCommand = `/usr/src/app/a.out < /usr/src/app/input_${index}.txt`;
-          const dockerProcess = spawn('docker', ['run', '--name', containerName, '--rm', '-v', `${taskDir}:/usr/src/app`, 'cpp-sandbox', 'sh', '-c', runCommand]);
+          const dockerProcess = spawn("docker", [
+            "run",
+            "--name",
+            containerName,
+            "--rm",
+            "-v",
+            `${taskDir}:/usr/src/app`,
+            "cpp-sandbox",
+            "sh",
+            "-c",
+            runCommand,
+          ]);
 
-          let stdout = '';
-          let stderr = '';
+          let stdout = "";
+          let stderr = "";
           let timedOut = false;
 
-          dockerProcess.stdout.on('data', (data) => {
+          dockerProcess.stdout.on("data", (data) => {
             stdout += data.toString();
           });
 
-          dockerProcess.stderr.on('data', (data) => {
+          dockerProcess.stderr.on("data", (data) => {
             stderr += data.toString();
           });
 
@@ -89,7 +117,10 @@ async function processQueue() {
             timedOut = true;
             exec(`docker rm -f ${containerName}`, (err) => {
               if (err) {
-                console.error(`Error removing container ${containerName}:`, err);
+                console.error(
+                  `Error removing container ${containerName}:`,
+                  err
+                );
               } else {
                 console.log(`Container ${containerName} removed successfully.`);
               }
@@ -100,9 +131,9 @@ async function processQueue() {
                 success: false,
               });
             });
-          }, 5000);
+          }, 10000);
 
-          dockerProcess.on('close', (code) => {
+          dockerProcess.on("close", (code) => {
             clearTimeout(timeoutId);
             if (timedOut) {
               return; // Already handled by the timeout
@@ -118,7 +149,11 @@ async function processQueue() {
             } else {
               const trimmedOutput = stdout.trim();
               const success = trimmedOutput === testCase.output.trim();
-              console.log(`Test case ${index + 1} completed: ${success ? "success" : "failure"}`);
+              console.log(
+                `Test case ${index + 1} completed: ${
+                  success ? "success" : "failure"
+                }`
+              );
               resolve({
                 input: testCase.input,
                 expected: testCase.output,
@@ -137,6 +172,28 @@ async function processQueue() {
 
       await cleanup(taskDir); // Ensure cleanup is called after all operations are complete
       activeProcesses--;
+      try {
+        const newSource = await Sources.findOneAndUpdate(
+          {
+            exerciseId: req.params.id,
+            userId: req.session.userId,
+          },
+          {
+            code: req.body.code,
+            score: score,
+            type: type,
+          },
+          {
+            new: true,
+            upsert: true,
+          }
+        );
+
+        console.log("Source document saved successfully:", newSource);
+      } catch (err) {
+        console.error("Error saving source document:", err);
+      }
+
       processQueue();
     });
   } catch (writeError) {

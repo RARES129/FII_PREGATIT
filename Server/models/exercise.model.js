@@ -16,6 +16,10 @@ const exerciseSchema = new Schema(
       type: String,
       required: true,
     },
+    type: {
+      type: String,
+      required: true,
+    },
     testCases: [
       {
         input: String,

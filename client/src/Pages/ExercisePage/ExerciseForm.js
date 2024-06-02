@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Formik, Form, ErrorMessage } from "formik";
 import { FormGroup, Button } from "react-bootstrap";
 import AceEditor from "react-ace";
 import Spinner from "react-bootstrap/Spinner";
-import { useState } from "react";
 
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
@@ -19,7 +18,7 @@ const Score = ({ value }) => {
       color = "yellow";
     } else if (value > 70 && value <= 90) {
       color = "blue";
-    } else if (value == 100) {
+    } else if (value === 100) {
       color = "green";
     }
   }
@@ -51,7 +50,7 @@ const Circles = ({ value }) => {
       color = "yellow";
     } else if (value > 70 && value <= 90) {
       color = "blue";
-    } else if (value == 100) {
+    } else if (value === 100) {
       color = "green";
     }
   }
@@ -75,6 +74,11 @@ const Circles = ({ value }) => {
 
 const ExerciseForm = (props) => {
   const [isEdited, setIsEdited] = useState(false);
+  const [initialCode, setInitialCode] = useState("");
+
+  useEffect(() => {
+    setInitialCode(props.initialValues.problemCode);
+  }, [props.initialValues.problemCode]);
 
   const handleAceEditorChange = (newValue, setFieldValue) => {
     setIsEdited(true);
@@ -85,12 +89,13 @@ const ExerciseForm = (props) => {
     <div className="form-wrapper-problem">
       <Formik
         {...props}
+        initialValues={{ ...props.initialValues, problemCode: initialCode }}
         onSubmit={(values, actions) => {
           props.onSubmit(values, actions); // call the onSubmit prop passed to ExerciseForm
           setIsEdited(false); // reset isEdited state to false after form submission
         }}
       >
-        {({ setFieldValue }) => (
+        {({ setFieldValue, values }) => (
           <Form>
             <FormGroup className="form-group">
               <h1>{props.exercise.name}</h1>
@@ -119,6 +124,7 @@ const ExerciseForm = (props) => {
                 showPrintMargin={true}
                 showGutter={true}
                 highlightActiveLine={true}
+                value={values.problemCode} // Set initial value
                 setOptions={{
                   showLineNumbers: true,
                   tabSize: 2,

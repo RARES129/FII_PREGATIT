@@ -57,6 +57,7 @@ body h3 {
   color: #ffffff;
 }
 
+.form-wrapper-profile,
 .form-wrapper-problem,
 .home-wrapper,
 .not-found-wrapper,
@@ -71,6 +72,11 @@ body h3 {
 .form-wrapper-problem {
   max-width: 1000px;
 }
+
+.form-wrapper-profile {
+  max-width: 700px;
+}
+
 
 .table-wrapper {
   max-width: 700px;
@@ -114,22 +120,13 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+.table-wrapper h1,
+.form-wrapper-profile h1,
+.form-wrapper h1,
 .form-wrapper-problem h1 {
   display: flex;
   justify-content: center;
   color: rgb(255, 0, 0);
-}
-
-.form-wrapper h1 {
-  display: flex;
-  justify-content: center;
-  color: rgb(255, 0, 0);
-}
-
-.table-wrapper h1 {
-  display: flex;
-  justify-content: center;
-  color: rgb(33, 37, 41);
 }
 
 .form-group {

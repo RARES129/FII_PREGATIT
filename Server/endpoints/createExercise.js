@@ -17,6 +17,7 @@ router.post("/", async (req, res, next) => {
     const newExercise = await exerciseSchema.create({
       name: req.body.problemName,
       text: req.body.problemText,
+      type: req.body.problemType,
       testCases,
     });
 

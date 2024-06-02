@@ -7,8 +7,9 @@ userSchema = require("../models/user.model");
 router.post("/", async (req, res, next) => {
   try {
     const user = await userSchema.findOne({ email: req.body.email });
+    console.log("User: ", user);
     if (!user) {
-      return res.status(400).send("User with this email does not exist");
+      return res.status(404).send("User with this email does not exist");
     }
 
     // Generate a random reset token

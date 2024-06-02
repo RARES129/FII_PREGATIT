@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
 import Home from "../Pages/Home/home.component.js";
 import Register from "../Pages/Register/register.component.js";
@@ -11,6 +11,8 @@ import ResetPassword from "../Pages/ForgotPassword/Reset.component.js";
 import CreateProblem from "../Pages/CreateProblem/create.problem.component.js";
 import Exercise from "../Pages/ExercisePage/exercise.component.js";
 import ProblemList from "../Pages/ProblemList/problem.list.component.js";
+import Profile from "../Pages/Profile/profile.component.js";
+import Admin from "./checkAdmin";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -20,8 +22,25 @@ const PublicRoute = ({ isLoggedIn, children }) => {
   return !isLoggedIn ? children : <Navigate to="/" replace />;
 };
 
+const AdminRoute = ({ children }) => {
+  const { isAdmin, isLoadingAdmin } = Admin();
+
+  if (isLoadingAdmin) {
+    return <div>Loading...</div>; // Show a loading indicator while checking admin status
+  }
+  return isAdmin ? children : <Navigate to="/" replace />;
+};
+
 const AppRoutes = ({ isLoggedIn }) => (
   <Routes>
+    <Route
+      path="/profile"
+      element={
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <Profile />
+        </PrivateRoute>
+      }
+    />
     <Route path="/" element={<Home />} />
     <Route
       path="/register"
@@ -34,9 +53,9 @@ const AppRoutes = ({ isLoggedIn }) => (
     <Route
       path="/user-list"
       element={
-        <PrivateRoute isLoggedIn={isLoggedIn}>
+        <AdminRoute>
           <UserList />
-        </PrivateRoute>
+        </AdminRoute>
       }
     />
     <Route
@@ -66,15 +85,16 @@ const AppRoutes = ({ isLoggedIn }) => (
     <Route
       path="/exercise/:id"
       element={
-        <Exercise />
-        // <PrivateRoute isLoggedIn={isLoggedIn}>
-        //   <Exercise />
-        // </PrivateRoute>
+        // <Exercise />
+        <PrivateRoute isLoggedIn={isLoggedIn}>
+          <Exercise />
+        </PrivateRoute>
       }
     />
     <Route
       path="/problem-list"
       element={
+        // <ProblemList />
         <PrivateRoute isLoggedIn={isLoggedIn}>
           <ProblemList />
         </PrivateRoute>

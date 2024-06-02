@@ -19,7 +19,11 @@ const Exercise = () => {
     axios
       .get(`http://localhost:4000/users/exercise-text/${id}`)
       .then((res) => {
-        setExercise(res.data);
+        setExercise(res.data.exercise);
+        setFormValues({
+          problemCode: res.data.userCode,
+          score: res.data.userScore,
+        });
       })
       .catch((err) => {
         if (err.response && err.response.status === 404) {
@@ -44,11 +48,15 @@ const Exercise = () => {
         }
       })
       .catch((err) => {
-        if (err.response && err.response.status === 400) {
+        if (err.response && err.response.status === 401) {
+          alert(err.response.data);
+          window.location.href = "/login";
+        } else if (err.response && err.response.status === 400) {
           alert(err.response.data);
         } else {
           alert("Something went wrong");
         }
+        setFormValues({ ...formValues, score: 0 });
         setLoading(false);
       });
   };
@@ -69,7 +77,7 @@ const Exercise = () => {
         onSubmit={onSubmit}
         enableReinitialize
         score={formValues.score}
-        loading={loading} 
+        loading={loading}
       >
         Submit
       </ExerciseForm>

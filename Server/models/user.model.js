@@ -13,6 +13,10 @@ let userSchema = new Schema(
     password: {
       type: String,
     },
+    admin: {
+      type: Boolean,
+      default: false,
+    },
     resetToken: {
       type: String,
       default: null,

@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 
 const LoggedIn = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); 
+  const [isLoading, setIsLoading] = useState(true);
+  const effectRan = useRef(false);
 
   useEffect(() => {
+    if (effectRan.current) return;
     const checkLoggedIn = async () => {
       try {
         const response = await axios.get(
@@ -22,6 +24,7 @@ const LoggedIn = () => {
     };
 
     checkLoggedIn();
+    effectRan.current = true;
   }, []);
 
   return { isLoggedIn, isLoading };

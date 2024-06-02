@@ -20,7 +20,7 @@ const Forgot = () => {
         }
       })
       .catch((err) => {
-        if (err.response && err.response.status === 400) {
+        if (err.response && err.response.status === 404) {
           alert(err.response.data);
         } else {
           alert("Something went wrong");

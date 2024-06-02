@@ -1,13 +1,15 @@
 import React from "react";
 import * as Yup from "yup";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { FormGroup, FormControl, Button } from "react-bootstrap";
+import { FormGroup, Button } from "react-bootstrap";
+import Select from "react-select";
 
 const UserForm = (props) => {
+  const { problemTypes } = props;
   const validationSchema = Yup.object().shape({
     problemName: Yup.string().required("Required"),
     problemText: Yup.string().required("Required"),
-
+    problemType: Yup.string().required("Required"),
     testInputs: Yup.array().of(Yup.string().required("Required")),
     testOutputs: Yup.array().of(Yup.string().required("Required")),
   });
@@ -15,7 +17,7 @@ const UserForm = (props) => {
   console.log(props);
   return (
     <div className="form-wrapper-problem">
-      <Formik {...props} validationSchema={validationSchema}>
+      <Formik {...props} validationSchema={validationSchema} key={Date.now()}>
         <Form>
           <FormGroup className="form-group">
             <h1>Create Problem</h1>
@@ -41,6 +43,40 @@ const UserForm = (props) => {
             />
             <ErrorMessage
               name="problemText"
+              className="d-block invalid-feedback"
+              component="span"
+            />
+          </FormGroup>
+
+          <FormGroup className="form-group">
+            <h6>Problem Type:</h6>
+            <Field name="problemType">
+              {({ field, form }) => (
+                <Select
+                  {...field}
+                  value={
+                    field.value
+                      ? { label: field.value, value: field.value }
+                      : null
+                  }
+                  options={problemTypes.map((type) => ({
+                    label: type,
+                    value: type,
+                  }))}
+                  placeholder="Select Problem Type"
+                  isSearchable
+                  onChange={(selectedOption) => {
+                    form.setFieldValue(
+                      "problemType",
+                      selectedOption ? selectedOption.value : ""
+                    );
+                  }}
+                />
+              )}
+            </Field>
+
+            <ErrorMessage
+              name="problemType"
               className="d-block invalid-feedback"
               component="span"
             />
