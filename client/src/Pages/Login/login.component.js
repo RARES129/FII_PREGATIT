@@ -1,4 +1,4 @@
-// Import Modules
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import LoginForm from "./LoginForm";
@@ -9,7 +9,7 @@ const LoginUser = () => {
     email: "",
     password: "",
   });
-  // onSubmit handler
+
   const onSubmit = (userObject) => {
     axios
       .post("http://localhost:4000/users/login", userObject)
@@ -28,7 +28,7 @@ const LoginUser = () => {
       });
   };
 
-  // Return student form
+
   return (
     <>
       <LoginForm
@@ -42,5 +42,5 @@ const LoginUser = () => {
   );
 };
 
-// Export CreateStudent Component
+
 export default LoginUser;

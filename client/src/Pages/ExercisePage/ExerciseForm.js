@@ -91,8 +91,8 @@ const ExerciseForm = (props) => {
         {...props}
         initialValues={{ ...props.initialValues, problemCode: initialCode }}
         onSubmit={(values, actions) => {
-          props.onSubmit(values, actions); // call the onSubmit prop passed to ExerciseForm
-          setIsEdited(false); // reset isEdited state to false after form submission
+          props.onSubmit(values, actions); 
+          setIsEdited(false); 
         }}
       >
         {({ setFieldValue, values }) => (

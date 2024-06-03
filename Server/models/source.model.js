@@ -28,5 +28,4 @@ const sourceSchema = new Schema(
   }
 );
 
-// Export the model
 module.exports = mongoose.model("sources", sourceSchema);

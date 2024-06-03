@@ -1,17 +1,16 @@
-// Import Modules
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import RegisterForm from "./RegisterForm";
 axios.defaults.withCredentials = true;
 
-// CreateStudent Component
 const CreateStudent = () => {
   const [formValues, setFormValues] = useState({
     name: "",
     email: "",
     password: "",
   });
-  // onSubmit handler
+
   const onSubmit = (Object) => {
     axios
       .post("http://localhost:4000/users/register", Object)
@@ -30,7 +29,6 @@ const CreateStudent = () => {
       });
   };
 
-  // Return student form
   return (
     <>
       <RegisterForm

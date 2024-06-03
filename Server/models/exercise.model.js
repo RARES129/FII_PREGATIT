@@ -26,13 +26,16 @@ const exerciseSchema = new Schema(
         output: String,
       },
     ],
+    successRate: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     collection: `Exercises`,
   }
 );
 
-// Pre-save hook to set the default value of id
 exerciseSchema.pre("save", async function (next) {
   const Exercise = this.constructor;
   if (!this.id) {
@@ -41,7 +44,7 @@ exerciseSchema.pre("save", async function (next) {
       if (lastExercise) {
         this.id = lastExercise.id + 1;
       } else {
-        this.id = 1; // If there are no other exercises in the collection
+        this.id = 1; 
       }
       next();
     } catch (error) {

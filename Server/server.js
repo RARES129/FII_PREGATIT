@@ -12,7 +12,6 @@ const generateSecretKey = () => {
 
 const secretKey = generateSecretKey();
 
-// Express Route
 const userRoute = require("./routes/user.route");
 
 connectDB();
@@ -31,13 +30,11 @@ app.use(
   })
 );
 
-// Create a new instance of MongoDBStore
 const store = new MongoDBStore({
   uri: process.env.DB_URL,
   collection: "sessions",
 });
 
-// Catch errors in MongoDBStore
 store.on("error", function (error) {
   console.log(error);
 });
@@ -50,7 +47,6 @@ store.clear(function (err) {
   }
 });
 
-// Add express-session middleware
 app.use(
   session({
     secret: secretKey,
@@ -64,27 +60,22 @@ app.use(
   })
 );
 
-// Middleware to log session ID (moved after userRoute)
 app.use("/users", userRoute, (req, res, next) => {
   console.log("Session ID:", req.sessionID);
   next();
 });
 
-// Routes
 app.use("/users", userRoute);
 
-// PORT
 const port = process.env.PORT || 4000;
 const server = app.listen(port, () => {
   console.log("Connected to port " + port);
 });
 
-// 404 Error
 app.use((req, res, next) => {
   res.status(404).send("Error 404!");
 });
 
-// Error Handling Middleware
 app.use(function (err, req, res, next) {
   console.error(err.message);
   if (!err.statusCode) err.statusCode = 500;

@@ -19,7 +19,6 @@ const UserForm = (props) => {
         "at least 1 number or special char (@,!,#, etc)."
       ),
   });
-  console.log(props);
   return (
     <div className="form-wrapper">
       <Formik {...props} validationSchema={validationSchema}>

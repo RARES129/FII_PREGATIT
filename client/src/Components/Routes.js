@@ -92,7 +92,7 @@ const AppRoutes = ({ isLoggedIn, isAdmin }) => (
       path="/problem-list"
       element={
         <PrivateRoute isLoggedIn={isLoggedIn}>
-          <ProblemList />
+          <ProblemList isAdmin={isAdmin}/>
         </PrivateRoute>
       }
     />

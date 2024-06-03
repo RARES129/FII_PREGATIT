@@ -16,5 +16,6 @@ router.use("/exercise/", require("../endpoints/submitExercise"));
 router.use("/profile/user", require("../endpoints/readUser"));
 router.use("/profile/success-rates", require("../endpoints/userSuccessRate"));
 router.use("/isAdmin", require("../endpoints/isAdmin"));
+router.use("/delete-exercise", require("../endpoints/deleteExercise"));
 
 module.exports = router;

@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "react-bootstrap";
 import axios from "axios";
+axios.defaults.withCredentials = true;
 
 const StudentTableRow = (props) => {
   const { _id, name, email } = props.obj;
@@ -14,7 +15,14 @@ const StudentTableRow = (props) => {
           window.location.reload();
         } else Promise.reject();
       })
-      .catch((err) => alert("Something went wrong"));
+      .catch((err) => {
+        if (err.response && err.response.status === 401) {
+          alert(err.response.data);
+          window.location.href = "/login";
+        } else {
+          alert("Something went wrong");
+        }
+      });
   };
 
   return (

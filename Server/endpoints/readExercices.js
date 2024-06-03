@@ -6,7 +6,7 @@ router.get("/", (req, res, next) => {
   exerciseSchema
     .find()
     .then((data) => {
-      // console.log(data);
+
       res.json(data);
     })
     .catch((error) => {

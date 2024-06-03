@@ -14,6 +14,11 @@ const NavBar = ({ isLoggedIn, isAdmin }) => (
       {isLoggedIn && (
         <Nav className="justify-content-end">
           <Nav>
+            <Link to={"/profile"} className="nav-link">
+              Profile
+            </Link>
+          </Nav>
+          <Nav>
             <Link to={"/problem-list"} className="nav-link">
               Exercises
             </Link>

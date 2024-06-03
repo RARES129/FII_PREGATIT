@@ -52,7 +52,6 @@ async function processQueue() {
     await fs.promises.writeFile(filename, code);
     console.log("File written successfully");
 
-    // Compile the C++ code
     const compileCommand = `g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
     const compileProcess = spawn("docker", [
       "run",
@@ -136,7 +135,7 @@ async function processQueue() {
           dockerProcess.on("close", (code) => {
             clearTimeout(timeoutId);
             if (timedOut) {
-              return; // Already handled by the timeout
+              return; 
             }
             if (code !== 0) {
               console.error(`Test case ${index + 1} execution error:`, stderr);
@@ -170,7 +169,7 @@ async function processQueue() {
       const score = (successCount / testCases.length) * 100;
       res.json({ results, score });
 
-      await cleanup(taskDir); // Ensure cleanup is called after all operations are complete
+      await cleanup(taskDir); 
       activeProcesses--;
       try {
         const newSource = await Sources.findOneAndUpdate(
@@ -190,6 +189,7 @@ async function processQueue() {
         );
 
         console.log("Source document saved successfully:", newSource);
+        await updateSuccessRate(req.params.id);
       } catch (err) {
         console.error("Error saving source document:", err);
       }
@@ -199,7 +199,7 @@ async function processQueue() {
   } catch (writeError) {
     console.error("Error writing file:", writeError);
     res.json({ results: [], score: 0 });
-    await cleanup(taskDir); // Ensure cleanup is called in case of an error
+    await cleanup(taskDir); 
     activeProcesses--;
     processQueue();
   }
@@ -208,7 +208,6 @@ async function processQueue() {
 async function cleanup(taskDir) {
   if (fs.existsSync(taskDir)) {
     try {
-      // Ensure all files are deleted first
       const files = await fs.promises.readdir(taskDir);
       for (const file of files) {
         await fs.promises.unlink(path.join(taskDir, file));
@@ -218,6 +217,31 @@ async function cleanup(taskDir) {
     } catch (unlinkError) {
       console.error("Error deleting task directory:", unlinkError);
     }
+  }
+}
+
+async function updateSuccessRate(exerciseId) {
+  try {
+    const sources = await Sources.find({ exerciseId });
+    if (sources.length > 0) {
+      const totalSubmissions = sources.length;
+      const successfulSubmissions = sources.filter(
+        (source) => source.score === 100
+      ).length;
+      const successRate = (successfulSubmissions / totalSubmissions) * 100;
+
+      await Exercise.findOneAndUpdate(
+        { id: exerciseId },
+        { successRate },
+        { new: true }
+      );
+
+      console.log(
+        `Updated success rate for exercise ${exerciseId} to ${successRate}%`
+      );
+    }
+  } catch (err) {
+    console.error("Error updating success rate:", err);
   }
 }
 

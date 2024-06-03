@@ -9,7 +9,6 @@ const UserForm = (props) => {
       .email(`You have enter an invalid email address`)
       .required("Required"),
   });
-  console.log(props);
   return (
     <div className="form-wrapper">
       <Formik {...props} validationSchema={validationSchema}>

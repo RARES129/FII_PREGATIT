@@ -34,7 +34,6 @@ const Exercise = () => {
   }, [id]);
 
   const onSubmit = (values) => {
-    console.log("Form submitted with values:", values.problemCode);
     setLoading(true);
 
     axios

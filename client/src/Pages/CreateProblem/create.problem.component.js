@@ -1,5 +1,4 @@
-// Import Modules
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import CreateProblemForm from "./CreateProblemForm";
 axios.defaults.withCredentials = true;
@@ -13,8 +12,8 @@ const CreateProblem = () => {
     testOutputs: Array(10).fill(""),
   });
 
-  const problemTypes = ["Vectors", "Graphs", "Character Strings"]; // List of problem types
-  // onSubmit handler
+  const problemTypes = ["Vectors", "Graphs", "Character Strings"];
+
   const onSubmit = (Object) => {
     axios
       .post("http://localhost:4000/users/create-exercise", Object)
@@ -25,7 +24,10 @@ const CreateProblem = () => {
         }
       })
       .catch((err) => {
-        if (err.response && err.response.status === 400) {
+        if (err.response && err.response.status === 401) {
+          alert(err.response.data);
+          window.location.href = "/login";
+        } else if (err.response && err.response.status === 400) {
           alert(err.response.data);
         } else {
           alert("Something went wrong");
@@ -33,7 +35,6 @@ const CreateProblem = () => {
       });
   };
 
-  // Return student form
   return (
     <>
       <CreateProblemForm

@@ -12,12 +12,10 @@ router.post("/", async (req, res, next) => {
       return res.status(404).send("User with this email does not exist");
     }
 
-    // Generate a random reset token
     const resetToken = require("crypto").randomBytes(32).toString("hex");
 
-    // Save the reset token and expiration time to the user's document in the database
     user.resetToken = resetToken;
-    user.resetTokenExpiration = Date.now() + 3600000; // Token valid for 1 hour
+    user.resetTokenExpiration = Date.now() + 3600000;
     await user.save();
 
     // Send the reset email

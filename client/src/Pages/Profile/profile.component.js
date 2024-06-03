@@ -16,7 +16,6 @@ const ProfileComponent = () => {
         return axios.get("http://localhost:4000/users/profile/success-rates");
       })
       .then((successRatesResponse) => {
-        console.log(successRatesResponse.data);
         const successRatesData = successRatesResponse.data;
 
         const chartData = {

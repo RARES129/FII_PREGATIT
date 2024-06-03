@@ -10,7 +10,6 @@ const LoginForm = (props) => {
       .required("Required"),
     password: Yup.string().required("Required"),
   });
-  console.log(props);
   return (
     <div className="form-wrapper">
       <Formik {...props} validationSchema={validationSchema}>

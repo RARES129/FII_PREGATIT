@@ -14,7 +14,6 @@ const UserForm = (props) => {
     testOutputs: Yup.array().of(Yup.string().required("Required")),
   });
 
-  console.log(props);
   return (
     <div className="form-wrapper-problem">
       <Formik {...props} validationSchema={validationSchema} key={Date.now()}>
