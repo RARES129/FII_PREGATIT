@@ -5,11 +5,13 @@ import { FormGroup, Button } from "react-bootstrap";
 import Select from "react-select";
 
 const UserForm = (props) => {
-  const { problemTypes } = props;
+  const { problemTypes, languages } = props;
+
   const validationSchema = Yup.object().shape({
     problemName: Yup.string().required("Required"),
     problemText: Yup.string().required("Required"),
     problemType: Yup.string().required("Required"),
+    language: Yup.string().required("Required"),
     testInputs: Yup.array().of(Yup.string().required("Required")),
     testOutputs: Yup.array().of(Yup.string().required("Required")),
   });
@@ -26,7 +28,7 @@ const UserForm = (props) => {
             <h6>Problem Name:</h6>
             <Field name="problemName" as="textarea" className="form-control" />
             <ErrorMessage
-              name="problemText"
+              name="problemName"
               className="d-block invalid-feedback"
               component="span"
             />
@@ -73,9 +75,41 @@ const UserForm = (props) => {
                 />
               )}
             </Field>
-
             <ErrorMessage
               name="problemType"
+              className="d-block invalid-feedback"
+              component="span"
+            />
+          </FormGroup>
+
+          <FormGroup className="form-group">
+            <h6>Language:</h6>
+            <Field name="language">
+              {({ field, form }) => (
+                <Select
+                  {...field}
+                  value={
+                    field.value
+                      ? { label: field.value, value: field.value }
+                      : null
+                  }
+                  options={languages.map((lang) => ({
+                    label: lang,
+                    value: lang,
+                  }))}
+                  placeholder="Select Language"
+                  isSearchable
+                  onChange={(selectedOption) => {
+                    form.setFieldValue(
+                      "language",
+                      selectedOption ? selectedOption.value : ""
+                    );
+                  }}
+                />
+              )}
+            </Field>
+            <ErrorMessage
+              name="language"
               className="d-block invalid-feedback"
               component="span"
             />

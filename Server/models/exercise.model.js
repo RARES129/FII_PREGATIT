@@ -20,6 +20,10 @@ const exerciseSchema = new Schema(
       type: String,
       required: true,
     },
+    language: {
+      type: String,
+      required: true,
+    },
     testCases: [
       {
         input: String,

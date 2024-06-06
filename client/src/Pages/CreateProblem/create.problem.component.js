@@ -8,11 +8,13 @@ const CreateProblem = () => {
     problemName: "",
     problemText: "",
     problemType: "",
+    language: "", 
     testInputs: Array(10).fill(""),
     testOutputs: Array(10).fill(""),
   });
 
   const problemTypes = ["Vectors", "Graphs", "Character Strings"];
+  const languages = ["C++", "Python"];
 
   const onSubmit = (Object) => {
     axios
@@ -42,6 +44,7 @@ const CreateProblem = () => {
         onSubmit={onSubmit}
         enableReinitialize
         problemTypes={problemTypes}
+        languages={languages} // Pass the languages prop
       >
         Create
       </CreateProblemForm>

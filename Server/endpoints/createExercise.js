@@ -21,6 +21,7 @@ router.post("/", async (req, res, next) => {
         name: req.body.problemName,
         text: req.body.problemText,
         type: req.body.problemType,
+        language: req.body.language,
         testCases,
       });
 

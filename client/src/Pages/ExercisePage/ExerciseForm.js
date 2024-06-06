@@ -91,8 +91,8 @@ const ExerciseForm = (props) => {
         {...props}
         initialValues={{ ...props.initialValues, problemCode: initialCode }}
         onSubmit={(values, actions) => {
-          props.onSubmit(values, actions); 
-          setIsEdited(false); 
+          props.onSubmit(values, actions);
+          setIsEdited(false);
         }}
       >
         {({ setFieldValue, values }) => (
@@ -113,7 +113,7 @@ const ExerciseForm = (props) => {
             </FormGroup>
 
             <FormGroup className="form-group">
-              <h5>Your code:</h5>
+              <h5>Your code ({props.exercise.language}):</h5>
 
               <AceEditor
                 style={{ height: "600px", width: "100%" }}
@@ -124,7 +124,7 @@ const ExerciseForm = (props) => {
                 showPrintMargin={true}
                 showGutter={true}
                 highlightActiveLine={true}
-                value={values.problemCode} // Set initial value
+                value={values.problemCode}
                 setOptions={{
                   showLineNumbers: true,
                   tabSize: 2,
