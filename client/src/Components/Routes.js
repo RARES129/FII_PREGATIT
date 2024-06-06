@@ -12,6 +12,8 @@ import CreateProblem from "../Pages/CreateProblem/create.problem.component.js";
 import Exercise from "../Pages/ExercisePage/exercise.component.js";
 import ProblemList from "../Pages/ProblemList/problem.list.component.js";
 import Profile from "../Pages/Profile/profile.component.js";
+import UserSource from "../Pages/UserSourcePage/user.source.component.js";
+import SourceList from "../Pages/SourceList/source.list.component.js";
 
 const PrivateRoute = ({ isLoggedIn, children }) => {
   return isLoggedIn ? children : <Navigate to="/login" replace />;
@@ -22,7 +24,6 @@ const PublicRoute = ({ isLoggedIn, children }) => {
 };
 
 const AdminRoute = ({ isLoggedIn, isAdmin, children }) => {
-
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }
@@ -51,7 +52,7 @@ const AppRoutes = ({ isLoggedIn, isAdmin }) => (
     <Route
       path="/user-list"
       element={
-        <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin} >
+        <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
           <UserList />
         </AdminRoute>
       }
@@ -92,7 +93,7 @@ const AppRoutes = ({ isLoggedIn, isAdmin }) => (
       path="/problem-list"
       element={
         <PrivateRoute isLoggedIn={isLoggedIn}>
-          <ProblemList isAdmin={isAdmin}/>
+          <ProblemList isAdmin={isAdmin} />
         </PrivateRoute>
       }
     />
@@ -109,6 +110,22 @@ const AppRoutes = ({ isLoggedIn, isAdmin }) => (
       element={
         <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
           <CreateProblem />
+        </AdminRoute>
+      }
+    />
+    <Route
+      path="/exercise-source/:id/:userId"
+      element={
+        <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
+          <UserSource />
+        </AdminRoute>
+      }
+    />
+    <Route
+      path="/source-list/:userId"
+      element={
+        <AdminRoute isLoggedIn={isLoggedIn} isAdmin={isAdmin}>
+          <SourceList />
         </AdminRoute>
       }
     />

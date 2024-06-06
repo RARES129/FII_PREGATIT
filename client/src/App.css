@@ -134,7 +134,8 @@ input[type="number"] {
 .table-wrapper h1,
 .form-wrapper-profile h1,
 .form-wrapper h1,
-.form-wrapper-problem h1 {
+.form-wrapper-problem h1,
+h4 {
   display: flex;
   justify-content: center;
   color: rgb(255, 0, 0);

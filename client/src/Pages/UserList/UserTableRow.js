@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "react-bootstrap";
+import { Link } from "react-router-dom";
 import axios from "axios";
 axios.defaults.withCredentials = true;
 
@@ -27,7 +28,9 @@ const StudentTableRow = (props) => {
 
   return (
     <tr>
-      <td>{name}</td>
+      <td>
+        <Link to={`/source-list/${_id}`}>{name}</Link>
+      </td>
       <td>{email}</td>
       <td>
         <Button onClick={deleteStudent} size="sm" variant="danger">
