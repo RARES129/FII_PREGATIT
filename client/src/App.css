@@ -267,26 +267,6 @@ h4 {
   background-color: rgba(0, 0, 0, 0.075);
 }
 
-@media (max-width: 768px) {
-  .form-wrapper-profile,
-  .form-wrapper-problem,
-  .home-wrapper,
-  .not-found-wrapper,
-  .form-wrapper,
-  .table-wrapper {
-    margin-top: 50px;
-    margin-bottom: 50px;
-    padding: 10px;
-  }
-
-  .home-wrapper {
-    margin-top: 50%;
-  }
-  .table-wrapper th,
-  .table-wrapper td {
-    padding: 10px;
-  }
-}
 
 .password-field {
   display: flex;
