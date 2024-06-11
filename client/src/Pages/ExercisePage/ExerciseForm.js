@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Formik, Form, ErrorMessage } from "formik";
-import { FormGroup, Button } from "react-bootstrap";
+import { FormGroup, Button, Tabs, Tab, Dropdown } from "react-bootstrap";
 import AceEditor from "react-ace";
 import Spinner from "react-bootstrap/Spinner";
 
+import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
 
@@ -74,24 +75,69 @@ const Circles = ({ value }) => {
 
 const ExerciseForm = (props) => {
   const [isEdited, setIsEdited] = useState(false);
-  const [initialCode, setInitialCode] = useState("");
+  const [files, setFiles] = useState([{ name: "", content: "" }]);
+  const [activeTab, setActiveTab] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    props.initialValues.language
+  );
 
   useEffect(() => {
-    setInitialCode(props.initialValues.problemCode);
-  }, [props.initialValues.problemCode]);
+    if (props.initialValues.files && props.initialValues.files.length > 0) {
+      setFiles(props.initialValues.files);
+      setActiveTab(props.initialValues.files[0].name);
+    }
+  }, [props.initialValues.files]);
 
-  const handleAceEditorChange = (newValue, setFieldValue) => {
+  const handleAceEditorChange = (newValue, fileName) => {
     setIsEdited(true);
-    setFieldValue("problemCode", newValue);
+    setFiles(
+      files.map((file) =>
+        file.name === fileName ? { ...file, content: newValue } : file
+      )
+    );
+  };
+
+  const handleAddTab = () => {
+    const newName = prompt("Enter file name:");
+    if (newName) {
+      setFiles([...files, { name: newName, content: "" }]);
+      setActiveTab(newName);
+    }
+  };
+
+  const handleLanguageChange = (language) => {
+    setSelectedLanguage(language);
+    if (language === "Python") {
+      setFiles(
+        files.map((file) => ({
+          ...file,
+          name: file.name === "main.cpp" ? "main.py" : file.name,
+        }))
+      );
+      setActiveTab("main.py");
+    } else {
+      setFiles(
+        files.map((file) => ({
+          ...file,
+          name: file.name === "main.py" ? "main.cpp" : file.name,
+        }))
+      );
+      setActiveTab("main.cpp");
+    }
+    setIsEdited(true);
   };
 
   return (
     <div className="form-wrapper-problem">
       <Formik
         {...props}
-        initialValues={{ ...props.initialValues, problemCode: initialCode }}
+        initialValues={{
+          ...props.initialValues,
+          files: files,
+          language: selectedLanguage,
+        }}
         onSubmit={(values, actions) => {
-          props.onSubmit(values, actions);
+          props.onSubmit({ ...values, files, language: selectedLanguage });
           setIsEdited(false);
         }}
       >
@@ -113,26 +159,66 @@ const ExerciseForm = (props) => {
             </FormGroup>
 
             <FormGroup className="form-group">
-              <h5>Your code ({props.exercise.language}):</h5>
+              <h5>Your code:</h5>
+              {props.exercise.language === "All languages" ? (
+                <Dropdown>
+                  <Dropdown.Toggle variant="secondary" id="dropdown-basic">
+                    {selectedLanguage}
+                  </Dropdown.Toggle>
 
-              <AceEditor
-                style={{ height: "600px", width: "100%" }}
-                mode="c_cpp"
-                theme="github"
-                name="problemCode"
-                fontSize={14}
-                showPrintMargin={true}
-                showGutter={true}
-                highlightActiveLine={true}
-                value={values.problemCode}
-                setOptions={{
-                  showLineNumbers: true,
-                  tabSize: 2,
-                }}
-                onChange={(newValue) =>
-                  handleAceEditorChange(newValue, setFieldValue)
-                }
-              />
+                  <Dropdown.Menu>
+                    <Dropdown.Item onClick={() => handleLanguageChange("C++")}>
+                      C++
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      onClick={() => handleLanguageChange("Python")}
+                    >
+                      Python
+                    </Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              ) : (
+                <Dropdown>
+                  <Dropdown.Toggle
+                    variant="secondary"
+                    id="dropdown-basic"
+                    disabled
+                  >
+                    {props.exercise.language}
+                  </Dropdown.Toggle>
+                </Dropdown>
+              )}
+              <Tabs
+                activeKey={activeTab}
+                onSelect={(k) => setActiveTab(k)}
+                id="editor-tabs"
+              >
+                {files.map((file, index) => (
+                  <Tab eventKey={file.name} title={file.name} key={index}>
+                    <AceEditor
+                      style={{ height: "600px", width: "100%" }}
+                      mode={selectedLanguage === "Python" ? "python" : "c_cpp"}
+                      theme="github"
+                      name={file.name}
+                      fontSize={14}
+                      showPrintMargin={true}
+                      showGutter={true}
+                      highlightActiveLine={true}
+                      value={file.content}
+                      setOptions={{
+                        showLineNumbers: true,
+                        tabSize: 2,
+                      }}
+                      onChange={(newValue) =>
+                        handleAceEditorChange(newValue, file.name)
+                      }
+                    />
+                  </Tab>
+                ))}
+                <Tab eventKey="add" title="+">
+                  <Button onClick={handleAddTab}>Add New File</Button>
+                </Tab>
+              </Tabs>
               <ErrorMessage
                 name="problemCode"
                 className="d-block invalid-feedback"

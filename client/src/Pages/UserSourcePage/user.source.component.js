@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import ExerciseForm from "./UserSourceForm";
+import UserSourceForm from "./UserSourceForm";
 import NotFound from "../NotFound/NotFound";
 axios.defaults.withCredentials = true;
 
 const Exercise = () => {
   const [exercise, setExercise] = useState(null);
+  const [language, setLanguage] = useState("C++");
   const [exerciseNotFound, setExerciseNotFound] = useState(false);
   const { id, userId } = useParams();
   const [formValues, setFormValues] = useState({
-    problemCode: "",
+    files: [{ name: "main.cpp", content: "" }],
     score: null,
     name: "",
   });
@@ -19,9 +20,19 @@ const Exercise = () => {
     axios
       .get(`http://localhost:4000/users/exercise-source/${id}/${userId}`)
       .then((res) => {
+        const initialFiles =
+          res.data.userFiles.length > 0
+            ? res.data.userFiles
+            : [
+                {
+                  name: res.data.language === "Python" ? "main.py" : "main.cpp",
+                  content: "",
+                },
+              ];
         setExercise(res.data.exercise);
+        setLanguage(res.data.language);
         setFormValues({
-          problemCode: res.data.userCode,
+          files: initialFiles,
           score: res.data.userScore,
           name: res.data.name,
         });
@@ -32,7 +43,7 @@ const Exercise = () => {
           setExerciseNotFound(true);
         } else console.error("Error fetching exercise:", err);
       });
-  }, [id]);
+  }, [id, userId]);
 
   if (exerciseNotFound) {
     return <NotFound />;
@@ -44,13 +55,12 @@ const Exercise = () => {
 
   return (
     <>
-      <ExerciseForm
+      <UserSourceForm
         initialValues={formValues}
         exercise={exercise}
+        language={language}
         score={formValues.score}
-      >
-        Submit
-      </ExerciseForm>
+      />
     </>
   );
 };

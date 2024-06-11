@@ -5,7 +5,6 @@ const sourceSchema = require("../models/source.model");
 
 router.get("/:id", async (req, res, next) => {
   try {
-
     const exercise = await exerciseSchema.findOne({
       id: req.params.id,
     });
@@ -15,13 +14,13 @@ router.get("/:id", async (req, res, next) => {
 
     const userSource = await sourceSchema.findOne({
       exerciseId: req.params.id,
-      userId: req.session.userId, 
+      userId: req.session.userId,
     });
-
 
     const response = {
       exercise,
-      userCode: userSource ? userSource.code : null,
+      language: userSource ? userSource.language : null,
+      userFiles: userSource ? userSource.files : [],
       userScore: userSource ? userSource.score : null,
     };
 

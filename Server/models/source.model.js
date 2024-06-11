@@ -1,6 +1,17 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const fileSchema = new Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+});
+
 const sourceSchema = new Schema(
   {
     exerciseId: {
@@ -11,14 +22,16 @@ const sourceSchema = new Schema(
       type: String,
       required: true,
     },
-    code: {
-      type: String,
-    },
+    files: [fileSchema],
     score: {
       type: Number,
       required: true,
     },
     type: {
+      type: String,
+      required: true,
+    },
+    language: {
       type: String,
       required: true,
     },

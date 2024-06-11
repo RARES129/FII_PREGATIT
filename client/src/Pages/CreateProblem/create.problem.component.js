@@ -14,7 +14,7 @@ const CreateProblem = () => {
   });
 
   const problemTypes = ["Vectors", "Graphs", "Character Strings"];
-  const languages = ["C++", "Python"];
+  const languages = ["All languages","C++", "Python"];
 
   const onSubmit = (Object) => {
     axios

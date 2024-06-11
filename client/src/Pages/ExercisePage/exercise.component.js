@@ -11,18 +11,40 @@ const Exercise = () => {
   const [exerciseNotFound, setExerciseNotFound] = useState(false);
   const { id } = useParams();
   const [formValues, setFormValues] = useState({
-    problemCode: "",
+    files: [{ name: "main.cpp", content: "" }],
     score: null,
+    language: "C++",
   });
 
   useEffect(() => {
     axios
       .get(`http://localhost:4000/users/exercise-text/${id}`)
       .then((res) => {
+        const initialFiles =
+          res.data.userFiles.length > 0
+            ? res.data.userFiles
+            : [
+                {
+                  name:
+                    res.data.exercise.language === "Python"
+                      ? "main.py"
+                      : "main.cpp",
+                  content: "",
+                },
+              ];
+
+        const defaultLanguage =
+          res.data.exercise.language === "All languages"
+            ? "C++"
+            : res.data.exercise.language;
+
+        const selectedLanguage = res.data.language || defaultLanguage;
+
         setExercise(res.data.exercise);
         setFormValues({
-          problemCode: res.data.userCode,
+          files: initialFiles,
           score: res.data.userScore,
+          language: selectedLanguage,
         });
       })
       .catch((err) => {
@@ -36,9 +58,15 @@ const Exercise = () => {
   const onSubmit = (values) => {
     setLoading(true);
 
+    const payload = values.files.map((file) => ({
+      name: file.name,
+      content: file.content,
+    }));
+
     axios
       .post(`http://localhost:4000/users/exercise/${id}`, {
-        code: values.problemCode,
+        files: payload,
+        language: values.language,
       })
       .then((res) => {
         if (res.status === 200) {

@@ -14,6 +14,7 @@ const MAX_PROCESSES = 10;
 router.post("/:id", async (req, res, next) => {
   if (req.session && req.session.userId) {
     console.log("Received submission for exercise", req.params.id);
+    console.log(req.body);
 
     const exercise = await Exercise.findOne({ id: req.params.id });
     if (!exercise) {
@@ -23,7 +24,7 @@ router.post("/:id", async (req, res, next) => {
 
     const testCases = exercise.testCases;
     const type = exercise.type;
-    const language = exercise.language;
+    const language = req.body.language;
 
     queue.push({ req, res, testCases, type, language });
     processQueue();
@@ -39,29 +40,26 @@ async function processQueue() {
 
   activeProcesses++;
   const { req, res, testCases, type, language } = queue.shift();
-  const code = req.body.code;
-  console.log("Processing code:", code);
+  const files = req.body.files;
+  console.log("Processing files:", files);
+
   const tempDir = path.join(__dirname, "..", "temp");
   await fs.promises.mkdir(tempDir, { recursive: true });
   const uniqueId = uuidv4();
   const taskDir = path.join(tempDir, `task_${uniqueId}`);
   await fs.promises.mkdir(taskDir, { recursive: true });
-  const filename = path.join(
-    taskDir,
-    language === "Python" ? `temp.py` : `temp.cpp`
-  );
-  const executable =
-    language === "Python"
-      ? `python3 /usr/src/app/temp.py`
-      : `/usr/src/app/a.out`;
 
   try {
-    await fs.promises.writeFile(filename, code);
-    console.log("File written successfully");
+    // Write all files to the temporary directory
+    for (const file of files) {
+      const filename = path.join(taskDir, file.name);
+      await fs.promises.writeFile(filename, file.content);
+    }
+    console.log("Files written successfully");
 
     let compileCommand, runCommand;
     if (language === "Python") {
-      runCommand = `python3 /usr/src/app/temp.py`;
+      runCommand = `python3 /usr/src/app/${files[0].name}`;
       await executeAndTest(
         res,
         req,
@@ -73,7 +71,9 @@ async function processQueue() {
         type
       );
     } else if (language === "C++") {
-      compileCommand = `g++ /usr/src/app/temp.cpp -o /usr/src/app/a.out`;
+      compileCommand = `g++ /usr/src/app/${files
+        .map((file) => file.name)
+        .join(" ")} -o /usr/src/app/a.out`;
       const compileProcess = spawn("docker", [
         "run",
         "--rm",
@@ -114,7 +114,7 @@ async function processQueue() {
       });
     }
   } catch (writeError) {
-    console.error("Error writing file:", writeError);
+    console.error("Error writing files:", writeError);
     res.json({ results: [], score: 0 });
     await cleanup(taskDir);
     activeProcesses--;
@@ -141,7 +141,7 @@ async function executeAndTest(
       const inputFilename = path.join(taskDir, `input_${index}.txt`);
       await fs.promises.writeFile(inputFilename, testCase.input);
 
-      const containerName = `${language}_sandbox_${uniqueId}_${index}`;
+      const containerName = `sandbox_${uniqueId}_${index}`;
       const dockerProcess = spawn("docker", [
         "run",
         "--name",
@@ -228,7 +228,7 @@ async function executeAndTest(
         userId: req.session.userId,
       },
       {
-        code: req.body.code,
+        files: req.body.files,
         score: score,
         type: type,
         language: language,

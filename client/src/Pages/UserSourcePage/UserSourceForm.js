@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Formik, Form, ErrorMessage } from "formik";
-import { FormGroup, Button } from "react-bootstrap";
+import { FormGroup, Button, Tabs, Tab } from "react-bootstrap";
 import AceEditor from "react-ace";
 
+import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
 
@@ -71,7 +72,24 @@ const Circles = ({ value }) => {
   } else return <div></div>;
 };
 
-const ExerciseForm = (props) => {
+const UserSourceForm = (props) => {
+  const [files, setFiles] = useState([{ name: "main.cpp", content: "" }]);
+  const [activeTab, setActiveTab] = useState("main.cpp");
+
+  useEffect(() => {
+    if (props.initialValues.files && props.initialValues.files.length > 0) {
+      let updatedFiles = props.initialValues.files;
+      if (
+        props.exercise.language === "Python" &&
+        updatedFiles[0].name !== "main.py"
+      ) {
+        updatedFiles[0].name = "main.py";
+      }
+      setFiles(updatedFiles);
+      setActiveTab(updatedFiles[0].name);
+    }
+  }, [props.initialValues.files, props.exercise.language]);
+
   return (
     <div className="form-wrapper-problem">
       <Formik {...props}>
@@ -93,24 +111,35 @@ const ExerciseForm = (props) => {
           </FormGroup>
 
           <FormGroup className="form-group">
-            <h5>Student code:</h5>
-
-            <AceEditor
-              style={{ height: "600px", width: "100%" }}
-              mode="c_cpp"
-              theme="github"
-              name="problemCode"
-              fontSize={14}
-              showPrintMargin={true}
-              showGutter={true}
-              highlightActiveLine={true}
-              value={props.initialValues.problemCode}
-              readOnly={true}
-              setOptions={{
-                showLineNumbers: true,
-                tabSize: 2,
-              }}
-            />
+            <h5>Student code ({props.language}):</h5>
+            <Tabs
+              activeKey={activeTab}
+              onSelect={(k) => setActiveTab(k)}
+              id="editor-tabs"
+            >
+              {files.map((file, index) => (
+                <Tab eventKey={file.name} title={file.name} key={index}>
+                  <AceEditor
+                    style={{ height: "600px", width: "100%" }}
+                    mode={
+                      props.exercise.language === "Python" ? "python" : "c_cpp"
+                    }
+                    theme="github"
+                    name={file.name}
+                    fontSize={14}
+                    showPrintMargin={true}
+                    showGutter={true}
+                    highlightActiveLine={true}
+                    value={file.content}
+                    readOnly={true}
+                    setOptions={{
+                      showLineNumbers: true,
+                      tabSize: 2,
+                    }}
+                  />
+                </Tab>
+              ))}
+            </Tabs>
             <ErrorMessage
               name="problemCode"
               className="d-block invalid-feedback"
@@ -145,4 +174,4 @@ const ExerciseForm = (props) => {
   );
 };
 
-export default ExerciseForm;
+export default UserSourceForm;
