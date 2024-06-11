@@ -81,7 +81,9 @@ h1 {
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
+.home-wrapper {
+  margin-top: 20%;
+}
 .form-wrapper-problem {
   max-width: 1000px;
 }
@@ -277,6 +279,9 @@ h4 {
     padding: 10px;
   }
 
+  .home-wrapper {
+    margin-top: 50%;
+  }
   .table-wrapper th,
   .table-wrapper td {
     padding: 10px;
