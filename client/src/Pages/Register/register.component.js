@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import RegisterForm from "./RegisterForm";
@@ -9,6 +8,7 @@ const CreateStudent = () => {
     name: "",
     email: "",
     password: "",
+    confirmPassword: ""
   });
 
   const onSubmit = (Object) => {
