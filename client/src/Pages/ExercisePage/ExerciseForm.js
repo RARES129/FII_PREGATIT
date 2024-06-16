@@ -7,6 +7,7 @@ import Spinner from "react-bootstrap/Spinner";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-c_cpp";
 import "ace-builds/src-noconflict/theme-github";
+import 'ace-builds/src-noconflict/ext-searchbox';
 
 const Score = ({ value }) => {
   let color = "gray";
@@ -127,6 +128,10 @@ const ExerciseForm = (props) => {
     setIsEdited(true);
   };
 
+  const formatText = (text) => {
+    return text.split("\n").map((line, index) => <p key={index}>{line}</p>);
+  };
+
   return (
     <div className="form-wrapper-problem">
       <Formik
@@ -147,15 +152,15 @@ const ExerciseForm = (props) => {
               <h1>{props.exercise.name}</h1>
             </FormGroup>
             <FormGroup className="form-group">
-              <h5>{props.exercise.text}</h5>
+              <h5>{formatText(props.exercise.text)}</h5>
             </FormGroup>
             <FormGroup className="form-group">
               <h5>Example Input:</h5>
-              <h6>{props.exercise.testCases[0].input}</h6>
+              <h6>{formatText(props.exercise.testCases[0].input)}</h6>
             </FormGroup>
             <FormGroup className="form-group">
               <h5>Example Output:</h5>
-              <h6>{props.exercise.testCases[0].output}</h6>
+              <h6>{formatText(props.exercise.testCases[0].output)}</h6>
             </FormGroup>
 
             <FormGroup className="form-group">

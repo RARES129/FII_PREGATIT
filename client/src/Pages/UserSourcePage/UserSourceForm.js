@@ -90,6 +90,10 @@ const UserSourceForm = (props) => {
     }
   }, [props.initialValues.files, props.exercise.language]);
 
+  const formatText = (text) => {
+    return text.split("\n").map((line, index) => <p key={index}>{line}</p>);
+  };
+
   return (
     <div className="form-wrapper-problem">
       <Formik {...props}>
@@ -99,15 +103,15 @@ const UserSourceForm = (props) => {
             <h4>The source of {props.initialValues.name}</h4>
           </FormGroup>
           <FormGroup className="form-group">
-            <h5>{props.exercise.text}</h5>
+            <h5>{formatText(props.exercise.text)}</h5>
           </FormGroup>
           <FormGroup className="form-group">
             <h5>Example Input:</h5>
-            <h6>{props.exercise.testCases[0].input}</h6>
+            <h6>{formatText(props.exercise.testCases[0].input)}</h6>
           </FormGroup>
           <FormGroup className="form-group">
             <h5>Example Output:</h5>
-            <h6>{props.exercise.testCases[0].output}</h6>
+            <h6>{formatText(props.exercise.testCases[0].output)}</h6>
           </FormGroup>
 
           <FormGroup className="form-group">

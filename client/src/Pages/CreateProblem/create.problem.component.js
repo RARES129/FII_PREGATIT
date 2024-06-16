@@ -8,13 +8,36 @@ const CreateProblem = () => {
     problemName: "",
     problemText: "",
     problemType: "",
-    language: "", 
+    language: "",
     testInputs: Array(10).fill(""),
     testOutputs: Array(10).fill(""),
   });
 
-  const problemTypes = ["Vectors", "Graphs", "Character Strings"];
-  const languages = ["All languages","C++", "Python"];
+  const problemTypes = [
+    "Dynamic Programming",
+    "Greedy Algorithms",
+    "Sorting",
+    "Searching",
+    "Linked Lists",
+    "Stacks",
+    "Queues",
+    "Trees",
+    "Hashing",
+    "Heaps",
+    "Graphs",
+    "Backtracking",
+    "Bit Manipulation",
+    "Mathematics",
+    "Geometry",
+    "Combinatorics",
+    "Probability",
+    "Number Theory",
+    "Game Theory",
+    "Computational Geometry",
+    "Data Structures",
+    "Algorithms",
+  ];
+  const languages = ["All languages", "C++", "Python"];
 
   const onSubmit = (Object) => {
     axios
