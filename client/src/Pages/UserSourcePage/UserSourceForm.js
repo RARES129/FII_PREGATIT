@@ -5,6 +5,7 @@ import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-c_cpp";
+import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
 
 const Score = ({ value }) => {
@@ -126,7 +127,11 @@ const UserSourceForm = (props) => {
                   <AceEditor
                     style={{ height: "600px", width: "100%" }}
                     mode={
-                      props.exercise.language === "Python" ? "python" : "c_cpp"
+                      props.language === "Python"
+                        ? "python"
+                        : props.language === "Java"
+                        ? "java"
+                        : "c_cpp"
                     }
                     theme="github"
                     name={file.name}

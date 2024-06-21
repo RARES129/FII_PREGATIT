@@ -11,7 +11,7 @@ const Exercise = () => {
   const [exerciseNotFound, setExerciseNotFound] = useState(false);
   const { id } = useParams();
   const [formValues, setFormValues] = useState({
-    files: [{ name: "main.cpp", content: "" }],
+    files: [{ name: "Main.cpp", content: "" }],
     score: null,
     language: "C++",
   });
@@ -27,8 +27,10 @@ const Exercise = () => {
                 {
                   name:
                     res.data.exercise.language === "Python"
-                      ? "main.py"
-                      : "main.cpp",
+                      ? "Main.py"
+                      : res.data.exercise.language === "Java"
+                      ? "Main.java"
+                      : "Main.cpp",
                   content: "",
                 },
               ];

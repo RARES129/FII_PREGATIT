@@ -14,7 +14,6 @@ const MAX_PROCESSES = 10;
 router.post("/:id", async (req, res, next) => {
   if (req.session && req.session.userId) {
     console.log("Received submission for exercise", req.params.id);
-    console.log(req.body);
 
     const exercise = await Exercise.findOne({ id: req.params.id });
     if (!exercise) {
@@ -41,7 +40,7 @@ async function processQueue() {
   activeProcesses++;
   const { req, res, testCases, type, language } = queue.shift();
   const files = req.body.files;
-  console.log("Processing files:", files);
+  console.log("Processing files for exercise", req.params.id);
 
   const tempDir = path.join(__dirname, "..", "temp");
   await fs.promises.mkdir(tempDir, { recursive: true });
@@ -50,7 +49,6 @@ async function processQueue() {
   await fs.promises.mkdir(taskDir, { recursive: true });
 
   try {
-    // Write all files to the temporary directory
     for (const file of files) {
       const filename = path.join(taskDir, file.name);
       await fs.promises.writeFile(filename, file.content);
@@ -74,52 +72,91 @@ async function processQueue() {
       compileCommand = `g++ /usr/src/app/${files
         .map((file) => file.name)
         .join(" ")} -o /usr/src/app/a.out`;
-      const compileProcess = spawn("docker", [
-        "run",
-        "--rm",
-        "-v",
-        `${taskDir}:/usr/src/app`,
-        "cpp-python-sandbox",
-        "sh",
-        "-c",
+      await runCompilationAndExecution(
+        res,
+        req,
         compileCommand,
-      ]);
-
-      compileProcess.stderr.on("data", (data) => {
-        console.error(`Compilation error: ${data.toString()}`);
-      });
-
-      compileProcess.on("close", async (code) => {
-        if (code !== 0) {
-          console.error(`Compilation error with exit code ${code}`);
-          res.status(400).send("Compilation error");
-          await cleanup(taskDir);
-          activeProcesses--;
-          processQueue();
-          return;
-        }
-
-        console.log("Compilation successful");
-        runCommand = `/usr/src/app/a.out`;
-        await executeAndTest(
-          res,
-          req,
-          testCases,
-          taskDir,
-          runCommand,
-          uniqueId,
-          language,
-          type
-        );
-      });
+        `/usr/src/app/a.out`,
+        taskDir,
+        testCases,
+        uniqueId,
+        language,
+        type
+      );
+    } else if (language === "Java") {
+      compileCommand = `javac /usr/src/app/${files
+        .map((file) => file.name)
+        .join(" ")}`;
+      runCommand = `java -cp /usr/src/app ${path.parse(files[0].name).name}`;
+      await runCompilationAndExecution(
+        res,
+        req,
+        compileCommand,
+        runCommand,
+        taskDir,
+        testCases,
+        uniqueId,
+        language,
+        type
+      );
     }
   } catch (writeError) {
     console.error("Error writing files:", writeError);
-    res.json({ results: [], score: 0 });
+    res.status(500).json({ results: [], score: 0 });
     await cleanup(taskDir);
     activeProcesses--;
     processQueue();
   }
+}
+
+async function runCompilationAndExecution(
+  res,
+  req,
+  compileCommand,
+  runCommand,
+  taskDir,
+  testCases,
+  uniqueId,
+  language,
+  type
+) {
+  const compileProcess = spawn("docker", [
+    "run",
+    "--rm",
+    "-v",
+    `${taskDir}:/usr/src/app`,
+    "cpp-java-python-sandbox", 
+    "sh",
+    "-c",
+    compileCommand,
+  ]);
+
+  compileProcess.stderr.on("data", (data) => {
+    console.error(`Compilation error: ${data.toString()}`);
+  });
+
+  compileProcess.on("close", async (code) => {
+    if (code !== 0) {
+      console.error(`Compilation failed with exit code ${code}`);
+      res.status(400).send("Compilation error");
+      await cleanup(taskDir);
+      activeProcesses--;
+      processQueue();
+      return;
+    }
+
+    console.log("Compilation successful");
+    await executeAndTest(
+      res,
+      req,
+      testCases,
+      taskDir,
+      runCommand,
+      uniqueId,
+      language,
+      type
+    );
+  });
 }
 
 async function executeAndTest(
@@ -134,10 +171,6 @@ async function executeAndTest(
 ) {
   const testPromises = testCases.map((testCase, index) => {
     return new Promise(async (resolve) => {
-      console.log(
-        `Starting test case ${index + 1}: input = ${testCase.input.trim()}`
-      );
-
       const inputFilename = path.join(taskDir, `input_${index}.txt`);
       await fs.promises.writeFile(inputFilename, testCase.input);
 
@@ -149,7 +182,7 @@ async function executeAndTest(
         "--rm",
         "-v",
         `${taskDir}:/usr/src/app`,
-        "cpp-python-sandbox",
+        "cpp-java-python-sandbox",
         "sh",
         "-c",
         `${runCommand} < /usr/src/app/input_${index}.txt`,
@@ -182,7 +215,7 @@ async function executeAndTest(
             success: false,
           });
         });
-      }, 10000);
+      }, 20000);
 
       dockerProcess.on("close", (code) => {
         clearTimeout(timeoutId);
@@ -219,7 +252,6 @@ async function executeAndTest(
   const results = await Promise.all(testPromises);
   const successCount = results.filter((result) => result.success).length;
   const score = (successCount / testCases.length) * 100;
-  res.json({ results, score });
 
   try {
     const newSource = await Sources.findOneAndUpdate(
@@ -239,12 +271,13 @@ async function executeAndTest(
       }
     );
 
-    console.log("Source document saved successfully:", newSource);
+    console.log("Source document saved successfully:");
     await updateSuccessRate(req.params.id);
   } catch (err) {
     console.error("Error saving source document:", err);
   }
 
+  res.json({ results, score });
   await cleanup(taskDir);
   activeProcesses--;
   processQueue();

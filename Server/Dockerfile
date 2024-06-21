@@ -1,11 +1,13 @@
-
 FROM gcc:latest
 
 RUN apt-get update && \
-    apt-get install -y python3 python3-pip
-
-RUN mkdir -p /usr/src/app
-
+    apt-get install -y \
+    python3 \
+    python3-pip \
+    default-jdk
 
 WORKDIR /usr/src/app
-# docker build -t cpp-python-sandbox .
+
+SHELL ["/bin/bash", "-c"]
+
+# docker build -t cpp-java-python-sandbox .

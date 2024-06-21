@@ -6,8 +6,9 @@ import Spinner from "react-bootstrap/Spinner";
 
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-c_cpp";
+import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
-import 'ace-builds/src-noconflict/ext-searchbox';
+import "ace-builds/src-noconflict/ext-searchbox";
 
 const Score = ({ value }) => {
   let color = "gray";
@@ -101,35 +102,78 @@ const ExerciseForm = (props) => {
   const handleAddTab = () => {
     const newName = prompt("Enter file name:");
     if (newName) {
-      setFiles([...files, { name: newName, content: "" }]);
-      setActiveTab(newName);
+      const fileExists = files.some((file) => file.name === newName);
+      if (fileExists) {
+        alert(
+          "A file with this name already exists. Please choose a different name."
+        );
+      } else if (newName.startsWith("Main")) {
+        alert(
+          'The file name cannot start with "Main". Please choose a different name.'
+        );
+      } else {
+        setFiles([...files, { name: newName, content: "" }]);
+        setActiveTab(newName);
+      }
     }
   };
 
   const handleLanguageChange = (language) => {
     setSelectedLanguage(language);
+    let newMainFile;
     if (language === "Python") {
-      setFiles(
-        files.map((file) => ({
-          ...file,
-          name: file.name === "main.cpp" ? "main.py" : file.name,
-        }))
-      );
-      setActiveTab("main.py");
+      newMainFile = "Main.py";
+    } else if (language === "Java") {
+      newMainFile = "Main.java";
     } else {
-      setFiles(
-        files.map((file) => ({
-          ...file,
-          name: file.name === "main.py" ? "main.cpp" : file.name,
-        }))
-      );
-      setActiveTab("main.cpp");
+      newMainFile = "Main.cpp";
     }
+    setFiles(
+      files.map((file) => ({
+        ...file,
+        name: file.name.startsWith("Main") ? newMainFile : file.name,
+      }))
+    );
+    setActiveTab(newMainFile);
     setIsEdited(true);
   };
 
   const formatText = (text) => {
     return text.split("\n").map((line, index) => <p key={index}>{line}</p>);
+  };
+
+  const handleRenameFile = (oldName) => {
+    const newName = prompt("Enter new file name:", oldName);
+    if (newName && newName !== oldName) {
+      const fileExists = files.some((file) => file.name === newName);
+      if (fileExists) {
+        alert(
+          "A file with this name already exists. Please choose a different name."
+        );
+      } else if (newName.startsWith("Main")) {
+        alert(
+          'The file name cannot start with "Main". Please choose a different name.'
+        );
+      } else {
+        setFiles(
+          files.map((file) =>
+            file.name === oldName ? { ...file, name: newName } : file
+          )
+        );
+        if (activeTab === oldName) {
+          setActiveTab(newName);
+        }
+        setIsEdited(true);
+      }
+    }
+  };
+
+  const handleDeleteFile = (name) => {
+    setFiles(files.filter((file) => file.name !== name));
+    if (activeTab === name && files.length > 1) {
+      setActiveTab(files[0].name);
+    }
+    setIsEdited(true);
   };
 
   return (
@@ -180,6 +224,9 @@ const ExerciseForm = (props) => {
                     >
                       Python
                     </Dropdown.Item>
+                    <Dropdown.Item onClick={() => handleLanguageChange("Java")}>
+                      Java
+                    </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               ) : (
@@ -195,14 +242,57 @@ const ExerciseForm = (props) => {
               )}
               <Tabs
                 activeKey={activeTab}
-                onSelect={(k) => setActiveTab(k)}
+                onSelect={(k) => {
+                  if (k === "add") {
+                    handleAddTab();
+                  } else {
+                    setActiveTab(k);
+                  }
+                }}
                 id="editor-tabs"
+                className="nav-tabs"
               >
                 {files.map((file, index) => (
-                  <Tab eventKey={file.name} title={file.name} key={index}>
+                  <Tab
+                    eventKey={file.name}
+                    title={
+                      <span
+                        onDoubleClick={() => handleRenameFile(file.name)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          color: activeTab === file.name ? "blue" : "black",
+                        }}
+                      >
+                        {file.name}{" "}
+                        {!file.name.startsWith("Main") && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteFile(file.name);
+                            }}
+                            style={{
+                              color: "red",
+                              cursor: "pointer",
+                              marginLeft: "5px",
+                            }}
+                          >
+                            X
+                          </span>
+                        )}
+                      </span>
+                    }
+                    key={index}
+                  >
                     <AceEditor
                       style={{ height: "600px", width: "100%" }}
-                      mode={selectedLanguage === "Python" ? "python" : "c_cpp"}
+                      mode={
+                        selectedLanguage === "Python"
+                          ? "python"
+                          : selectedLanguage === "Java"
+                          ? "java"
+                          : "c_cpp"
+                      }
                       theme="github"
                       name={file.name}
                       fontSize={14}
@@ -220,9 +310,7 @@ const ExerciseForm = (props) => {
                     />
                   </Tab>
                 ))}
-                <Tab eventKey="add" title="+">
-                  <Button onClick={handleAddTab}>Add New File</Button>
-                </Tab>
+                <Tab eventKey="add" title="+"></Tab>
               </Tabs>
               <ErrorMessage
                 name="problemCode"
