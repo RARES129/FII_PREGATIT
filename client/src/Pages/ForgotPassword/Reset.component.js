@@ -15,12 +15,13 @@ const ResetPassword = () => {
       .then((res) => {
         if (res.status === 200) {
           alert(res.data);
-          window.location.href = "/";
+          window.location.href = "/login";
         }
       })
       .catch((err) => {
         if (err.response && err.response.status === 400) {
           alert(err.response.data);
+          // window.location.href = "/login";
         } else {
           alert("Something went wrong");
         }

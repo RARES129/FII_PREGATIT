@@ -7,7 +7,7 @@ router.use("/logout", require("../endpoints/logout"));
 router.use("/", require("../endpoints/readUsers"));
 router.use("/delete-student/", require("../endpoints/deleteUser"));
 router.use("/forgot-password", require("../endpoints/forgotPassword"));
-router.use("/reset-password/:id", require("../endpoints/resetPassword"));
+router.use("/reset-password/", require("../endpoints/resetPassword"));
 router.use("/isLoggedIn", require("../endpoints/isLoggedIn"));
 router.use("/create-exercise", require("../endpoints/createExercise"));
 router.use("/exercises", require("../endpoints/readExercices"));

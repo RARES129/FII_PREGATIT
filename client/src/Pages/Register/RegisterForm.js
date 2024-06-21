@@ -16,13 +16,14 @@ const UserForm = (props) => {
       .min(8, "Password must be at least 8 characters")
       .matches(/[a-z]/, "Password must contain at least one lowercase char")
       .matches(/[A-Z]/, "Password must contain at least one uppercase char")
+      .matches(/\d/, "Password must contain at least one number")
       .matches(
         /[!@#$%^&*(),.?":{}|<>]/,
-        "Password must contain at least 1 number or special char (@,!,#, etc)."
+        "Password must contain at least one special char (@,!,#, etc)."
       ),
     confirmPassword: Yup.string()
       .required("Required")
-      .oneOf([Yup.ref('password'), null], 'Passwords must match')
+      .oneOf([Yup.ref("password"), null], "Passwords must match"),
   });
 
   const toggleShowPassword = () => {
@@ -62,7 +63,10 @@ const UserForm = (props) => {
                 type={showPassword ? "text" : "password"}
                 className="form-control"
               />
-              <Button onClick={toggleShowPassword} className="show-password-btn">
+              <Button
+                onClick={toggleShowPassword}
+                className="show-password-btn"
+              >
                 {showPassword ? "Hide" : "Show"}
               </Button>
             </div>
