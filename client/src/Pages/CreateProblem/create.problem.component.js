@@ -37,7 +37,7 @@ const CreateProblem = () => {
     "Data Structures",
     "Algorithms",
   ];
-  const languages = ["All languages", "C++", "Python"];
+  const languages = ["All languages", "C++", "Python", "Java"];
 
   const onSubmit = (Object) => {
     axios
